@@ -65,3 +65,49 @@ lib/
 └── services/              # External integrations (maps, storage, API)
 
 > 🧪 Follows a feature-first structure for scalability & modularity.
+
+```
+---
+
+## 📈 Development Path
+
+See: 📄 [Development Plan & Roadmap](docs/DEVELOPMENT_PLAN.md)
+
+---
+
+## 🛠 Architecture Diagram
+
+```mermaid
+flowchart TD
+  subgraph Client[Flutter Mobile App]
+    direction TB
+    UI[User Interface (Flutter)]
+    DeviceTag[Hardware Tagging & Device Fingerprint]
+    IPTag[IP Tagging & Geolocation]
+  end
+
+  subgraph Backend[Backend Services]
+    direction TB
+    Supabase[Supabase (Auth, Realtime, Storage, ORM)]
+    Neon[Neon PostgreSQL (Tx Logs, Listings, Users)]
+    Redis[Upstash Redis (Caching, Pub/Sub)]
+    Maps[Google Maps SDK (Location, Directions)]
+    Token[Native Token Ledger (internal → blockchain)]
+  end
+
+  subgraph Monitoring
+    Sentry[Sentry (Error & Crash Monitoring)]
+  end
+
+  %% Connections
+  UI --> Supabase
+  UI --> Maps
+  UI --> Redis
+  UI --> Token
+  DeviceTag --> Supabase
+  IPTag --> Supabase
+  Supabase --> Neon
+  Supabase --> Redis
+  Supabase --> Token
+  UI --> Sentry
+```
