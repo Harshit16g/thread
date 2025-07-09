@@ -111,3 +111,6 @@ flowchart TD
   Supabase --> Token
   UI --> Sentry
 ```
+```mermaid
+  info
+```
