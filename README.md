@@ -1,5 +1,3 @@
-
-
 # 🌐 TabL
 
 > A decentralized super-app built with Flutter — combining a multi-service marketplace, ride-sharing, rentals, food services, voting, community news, and a native token economy.
@@ -70,17 +68,16 @@ lib/
 ```
 ---
 
-📈 Development Path
+##📈 Development Path
 
 See: 📄 Development Plan & Roadmap
 
 
 ---
 
-🛠  Architecture Diagram
+##🛠  Architecture Diagram
 
 ```Mermaid
-
 flowchart TD
   subgraph Client[Flutter Mobile App]
     direction TB
