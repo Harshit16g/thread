@@ -81,22 +81,22 @@ See: 📄 [Development Plan & Roadmap](docs/DEVELOPMENT_PLAN.md)
 flowchart TD
   subgraph Client[Flutter Mobile App]
     direction TB
-    UI[User Interface (Flutter)]
+    UI[User Interface -Flutter]
     DeviceTag[Hardware Tagging & Device Fingerprint]
     IPTag[IP Tagging & Geolocation]
   end
 
   subgraph Backend[Backend Services]
     direction TB
-    Supabase[Supabase (Auth, Realtime, Storage, ORM)]
-    Neon[Neon PostgreSQL (Tx Logs, Listings, Users)]
-    Redis[Upstash Redis (Caching, Pub/Sub)]
-    Maps[Google Maps SDK (Location, Directions)]
-    Token[Native Token Ledger (internal → blockchain)]
+    Supabase[Supabase -Auth, Realtime, Storage, ORM]
+    Neon[Neon PostgreSQL -Tx Logs, Listings, Users]
+    Redis[Upstash Redis -Caching, Pub/Sub]
+    Maps[Google Maps SDK -Location, Directions]
+    Token[Native Token Ledger -internal → blockchain]
   end
 
   subgraph Monitoring
-    Sentry[Sentry (Error & Crash Monitoring)]
+    Sentry[Sentry - Error & Crash Monitoring]
   end
 
   %% Connections
