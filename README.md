@@ -74,7 +74,7 @@ lib/
 
 See: 📄 Development Plan & Roadmap
 
-
+```
 ---
 
 🛠  Architecture Diagram
