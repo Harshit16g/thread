@@ -76,4 +76,96 @@ See: 📄 [Development Plan & Roadmap](docs/DEVELOPMENT_PLAN.md)
 ---
 
 ## 🛠 Architecture Diagram
-[!Architecture](assets/architecture.jpg)
+```mermaid
+flowchart TD
+  subgraph Client[Flutter Mobile App]
+    direction TB
+    UI[User Interface -Flutter]
+    DeviceTag[Hardware Tagging & Device Fingerprint]
+    IPTag[IP Tagging & Geolocation]
+  end
+
+  subgraph Backend[Backend Services]
+    direction TB
+    Supabase[Supabase -Auth, Realtime, Storage, ORM]
+    Neon[Neon PostgreSQL -Tx Logs, Listings, Users]
+    Redis[Upstash Redis -Caching, Pub/Sub]
+    Maps[Google Maps SDK -Location, Directions]
+    Token[Native Token Ledger -internal → blockchain]
+  end
+
+  subgraph Monitoring
+    Sentry[Sentry - Error & Crash Monitoring]
+  end
+
+  %% Connections
+  UI --> Supabase
+  UI --> Maps
+  UI --> Redis
+  UI --> Token
+  DeviceTag --> Supabase
+  IPTag --> Supabase
+  Supabase --> Neon
+  Supabase --> Redis
+  Supabase --> Token
+  UI --> Sentry
+```
+---
+
+## 🤝 Contributing
+
+1. Clone the repository:
+
+git clone https://github.com/your-org/tabl.git
+
+
+2. Install dependencies:
+
+flutter pub get
+
+
+3. Run the app:
+
+flutter run
+
+
+4. Create a feature branch:
+
+git checkout -b feat/my-feature
+
+
+5. Commit, push, and open a pull request.
+
+
+
+> Please follow the guidelines in CONTRIBUTING.md.
+![contribution.md](docs/contribution.md)
+
+
+
+---
+
+## 🛡 Security & Privacy
+
+Decentralized verification by trusted users
+
+Encrypted storage for KYC data
+
+Hardware tagging & IP tagging to detect duplicate or fake accounts
+
+Immutable transaction logs to ensure transparency
+
+
+
+---
+
+## 🧠 License
+
+MIT (or another license of your choice)
+
+
+---
+
+Built with ❤️ using Flutter, Supabase, Neon, Upstash, Sentry, and open-source spirit.
+
+---
