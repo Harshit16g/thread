@@ -1,48 +1,72 @@
-# 🌐 TabL
+---
+
+🌐 TabL
 
 > A decentralized super-app built with Flutter — combining a multi-service marketplace, ride-sharing, rentals, food services, voting, community news, and a native token economy.
 
----
 
-## 🎯 **Vision**
-ServeHub is designed to:
-- Empower users to **offer and consume peer-to-peer services**: rides, deliveries, rentals, tiffin, etc.
-- **Verify and onboard** new users in a decentralized, community-driven way.
-- Introduce a **native token** for payments, rewards, and voting.
-- Deliver **real-time, community-driven news**.
-- Prevent fraud through **hardware tagging, IP tagging, and an immutable transaction chain**.
+
 
 ---
 
-## 🚀 **Tech Stack**
-| Area        | Technology                          |
-| ----------- | ----------------------------------- |
-| UI          | Flutter                             |
-| Auth        | Supabase OAuth                      |
-| Backend DB  | Neon (PostgreSQL) + Supabase ORM    |
-| Realtime    | Supabase Realtime + Upstash Redis   |
-| Native Token| Internal ledger → planned blockchain|
-| Maps        | Google Maps SDK                     |
-| Storage     | Supabase Storage                    |
-| Monitoring  | Sentry                              |
-| Anti-fraud  | Device fingerprinting, IP tagging   |
+🎯 Vision
+
+TabL is designed to:
+
+Empower users to offer and consume peer-to-peer services: rides, deliveries, rentals, tiffin, etc.
+
+Verify and onboard new users in a decentralized, community-driven way.
+
+Introduce a native token for payments, rewards, and voting.
+
+Deliver real-time, community-driven news.
+
+Prevent fraud through hardware tagging, IP tagging, and an immutable transaction chain.
+
+
 
 ---
 
-## 🧩 **Key Features**
-- ✅ Multi-service marketplace (rides, rentals, food, delivery, etc.)
-- ✅ Users can act as providers & consumers
-- ✅ Decentralized user verification & referral system
-- ✅ Native token for payments, rewards, and governance
-- ✅ Voting & proposal system
-- ✅ Real-time community news
-- ✅ Hardware/IP tagging & immutable transaction logs for fraud prevention
+🚀 Tech Stack
+
+Area	Technology
+
+UI	Flutter
+Auth	Supabase OAuth
+Backend DB	Neon (PostgreSQL) + Supabase ORM
+Realtime	Supabase Realtime + Upstash Redis
+Native Token	Internal ledger → planned blockchain
+Maps	Google Maps SDK
+Storage	Supabase Storage
+Monitoring	Sentry
+Anti-fraud	Device fingerprinting, IP tagging
+
+
 
 ---
 
-## 📦 **Project Structure (proposed)**
+🧩 Key Features
 
-```plaintext
+✅ Multi-service marketplace (rides, rentals, food, delivery, etc.)
+
+✅ Users can act as providers & consumers
+
+✅ Decentralized user verification & referral system
+
+✅ Native token for payments, rewards, and governance
+
+✅ Voting & proposal system
+
+✅ Real-time community news
+
+✅ Hardware/IP tagging & immutable transaction logs for fraud prevention
+
+
+
+---
+
+📦 Project Structure (proposed)
+
 lib/
 ├── main.dart
 ├── core/                  # Shared services, constants, utils, theming
@@ -65,38 +89,37 @@ lib/
 
 
 
-```
+
 ---
 
-##📈 Development Path
+📈 Development Path
 
 See: 📄 Development Plan & Roadmap
 
 
 ---
 
-##🛠  Architecture Diagram
+🛠 Architecture Diagram
 
-```Mermaid
 flowchart TD
   subgraph Client[Flutter Mobile App]
     direction TB
-    UI[User Interface<br/>Flutter]
-    DeviceTag[Hardware Tagging &<br/>Device Fingerprint]
+    UI[User Interface (Flutter)]
+    DeviceTag[Hardware Tagging & Device Fingerprint]
     IPTag[IP Tagging & Geolocation]
   end
 
   subgraph Backend[Backend Services]
     direction TB
-    Supabase[Supabase<br/>Auth, Realtime, Storage, ORM]
-    Neon[Neon PostgreSQL<br/>Immutable Tx Logs, Listings, Users]
-    Redis[Upstash Redis<br/>Caching, Pub/Sub]
-    Maps[Google Maps SDK<br/>Location, Directions]
-    Token[Native Token Ledger<br/>internal → blockchain]
+    Supabase[Supabase (Auth, Realtime, Storage, ORM)]
+    Neon[Neon PostgreSQL (Tx Logs, Listings, Users)]
+    Redis[Upstash Redis (Caching, Pub/Sub)]
+    Maps[Google Maps SDK (Location, Directions)]
+    Token[Native Token Ledger (internal → blockchain)]
   end
 
   subgraph Monitoring
-    Sentry[Sentry<br/>Error & Crash Monitoring]
+    Sentry[Sentry (Error & Crash Monitoring)]
   end
 
   %% Connections
@@ -110,34 +133,31 @@ flowchart TD
   Supabase --> Redis
   Supabase --> Token
   UI --> Sentry
-```
+
 
 ---
+
 🤝 Contributing
 
 1. Clone the repository:
 
+git clone https://github.com/your-org/tabl.git
 
-
-git clone https://github.com/your-org/servehub.git
 
 2. Install dependencies:
 
-
-
 flutter pub get
+
 
 3. Run the app:
 
-
-
 flutter run
+
 
 4. Create a feature branch:
 
-
-
 git checkout -b feat/my-feature
+
 
 5. Commit, push, and open a pull request.
 
