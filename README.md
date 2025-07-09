@@ -67,37 +67,39 @@ lib/
 
 
 
-
+```
 ---
 
 📈 Development Path
 
 See: 📄 Development Plan & Roadmap
 
-```
+
 ---
 
 🛠  Architecture Diagram
+
 ```Mermaid
+
 flowchart TD
   subgraph Client[Flutter Mobile App]
     direction TB
-    UI[User Interface<br/>(Flutter)]
+    UI[User Interface<br/>Flutter]
     DeviceTag[Hardware Tagging &<br/>Device Fingerprint]
     IPTag[IP Tagging & Geolocation]
   end
 
   subgraph Backend[Backend Services]
     direction TB
-    Supabase[Supabase<br/>(Auth, Realtime, Storage, ORM)]
-    Neon[Neon PostgreSQL<br/>(Immutable Tx Logs, Listings, Users)]
-    Redis[Upstash Redis<br/>(Caching, Pub/Sub)]
-    Maps[Google Maps SDK<br/>(Location, Directions)]
-    Token[Native Token Ledger<br/>(internal → blockchain)]
+    Supabase[Supabase<br/>Auth, Realtime, Storage, ORM]
+    Neon[Neon PostgreSQL<br/>Immutable Tx Logs, Listings, Users]
+    Redis[Upstash Redis<br/>Caching, Pub/Sub]
+    Maps[Google Maps SDK<br/>Location, Directions]
+    Token[Native Token Ledger<br/>internal → blockchain]
   end
 
   subgraph Monitoring
-    Sentry[Sentry<br/>(Error & Crash Monitoring)]
+    Sentry[Sentry<br/>Error & Crash Monitoring]
   end
 
   %% Connections
