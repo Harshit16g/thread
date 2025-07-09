@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meta/meta.dart';
 
 @immutable
 abstract class AuthEvent {}
-
-class AuthChangeColorEvent extends AuthEvent {}
 
 enum AuthSignInType { google, email }
 

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'auth_gate.dart';
+import 'auth_gate.dart'; // Import AuthGate
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -29,14 +28,16 @@ class MyApp extends StatelessWidget {
       create: (context) => AuthRepositoryImpl(supabase),
       child: BlocProvider<AuthBloc>(
         create: (context) => AuthBloc(
-          RepositoryProvider.of<AuthRepository>(dvhwljjcsquscvpoksff),
+          RepositoryProvider.of<AuthRepository>(context),
         ),
         child: MaterialApp(
-          title: 'Flutter Auth & Nav Demo',
+          title: 'TabL',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData.dark().copyWith(
             scaffoldBackgroundColor: const Color(0xFF1C1C1E),
           ),
-          // Use the AuthGate to handle routing based on auth state
+          // Set AuthGate as the home. It will correctly show the AuthScreen
+          // with its video background.
           home: const AuthGate(),
         ),
       ),
