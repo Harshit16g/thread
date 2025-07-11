@@ -5,12 +5,14 @@ class GlassButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Widget child;
   final bool isLoading;
+  final Color? color; // Add the color property
 
   const GlassButton({
     super.key,
     required this.onPressed,
     required this.child,
     this.isLoading = false,
+    this.color, // Make color parameter available in the constructor
   });
 
   @override
@@ -20,8 +22,9 @@ class GlassButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: GlassContainer(
         borderRadius: 12,
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        // Use the provided color, or default to a neutral glass
+        color: color ?? Colors.white.withOpacity(0.15),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14.0),
           child: Center(
@@ -32,7 +35,7 @@ class GlassButton extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : DefaultTextStyle(
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     child: child,
                   ),
           ),
