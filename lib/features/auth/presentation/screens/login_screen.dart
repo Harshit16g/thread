@@ -7,14 +7,14 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/events/auth_event.dart';
 import '../bloc/states/auth_state.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -28,15 +28,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: const GlassAppBar(title: 'Create Account'),
+      extendBodyBehindAppBar: true, 
+      appBar: const GlassAppBar(title: 'Welcome Back'),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.errorMessage == null && !state.isLoading) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Success! Please check your email to verify your account.')),
-            );
-            Navigator.of(context).pop();
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
           }
         },
         builder: (context, state) {
@@ -70,14 +69,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   GlassButton(
                     onPressed: () {
                       context.read<AuthBloc>().add(
-                            AuthSignUpRequested(
+                            AuthLoginRequested(
                               email: _emailController.text.trim(),
                               password: _passwordController.text.trim(),
                             ),
                           );
                     },
                     isLoading: state.isLoading,
-                    child: const Text('Sign Up'),
+                    child: const Text('Log In'),
+                  ),
+                  TextButton(
+                    onPressed: () { /* TODO: Implement Forgot Password */ },
+                    child: const Text('Forgot Password?', style: TextStyle(color: Colors.white70)),
                   ),
                 ],
               ),

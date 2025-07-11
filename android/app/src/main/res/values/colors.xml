@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand color for the adaptive icon background -->
     <color name="ic_launcher_background">#075E54</color>
+    <!-- Brand color for the native splash screen background -->
+    <color name="splash_bg">#075E54</color> 
 </resources>
