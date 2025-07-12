@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 @immutable
 abstract class AuthEvent {}
 
+// Restore this enum for tracking UI state
 enum AuthSignInType { google, email }
 
 class AuthSignInEvent extends AuthEvent {
@@ -16,7 +18,6 @@ class AuthSignUpRequested extends AuthEvent {
   AuthSignUpRequested({required this.email, required this.password});
 }
 
-// Event for logging in with email and password
 class AuthLoginRequested extends AuthEvent {
   final String email;
   final String password;

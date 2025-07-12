@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 enum AuthButtonStyle {
@@ -47,11 +46,9 @@ class _AuthButtonState extends State<AuthButton> {
   Widget build(BuildContext context) {
     final bool isSolid = widget.style == AuthButtonStyle.solid;
     
-    // Invert colors for solid style when pressed
     final Color effectiveColor = isSolid && _isPressed ? widget.solidTextColor : widget.solidColor;
     final Color effectiveTextColor = isSolid && _isPressed ? widget.solidColor : widget.solidTextColor;
     
-    // For glass style, reduce opacity when pressed
     final double glassOpacity = _isPressed ? 0.35 : 0.2;
 
     return GestureDetector(
@@ -62,14 +59,14 @@ class _AuthButtonState extends State<AuthButton> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isSolid ? effectiveColor : Colors.blueGrey.withOpacity(glassOpacity),
+          color: isSolid ? effectiveColor : Color.fromRGBO(76, 86, 107, glassOpacity), // Using blueGrey with opacity
           borderRadius: BorderRadius.circular(12),
-          border: isSolid ? null : Border.all(color: Colors.white.withOpacity(0.3)),
+          border: isSolid ? null : Border.all(color: const Color.fromRGBO(255, 255, 255, 0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: const Color.fromRGBO(0, 0, 0, 0.2),
               blurRadius: 10,
-              offset: const Offset(0, 5),
+              offset: const Offset(0, 4),
             ),
           ],
         ),

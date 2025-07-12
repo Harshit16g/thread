@@ -47,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 80), // Space for AppBar
+                    const SizedBox(height: 80),
                     CustomFormField(
                       controller: _emailController,
                       labelText: 'Email',

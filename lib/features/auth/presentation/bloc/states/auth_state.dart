@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../events/auth_event.dart'; // Import events to get AuthSignInType
+import 'package:tabl/features/auth/presentation/bloc/events/auth_event.dart';
 
 @immutable
 class AuthState {
   final bool isLoading;
   final String? errorMessage;
-  // Add this field to track which sign-in process is active
   final AuthSignInType? signInType;
 
   const AuthState({

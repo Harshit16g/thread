@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../domain/repositories/auth_repository.dart';
 import 'events/auth_event.dart';
 import 'states/auth_state.dart';
@@ -14,7 +15,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   FutureOr<void> _onSignIn(AuthSignInEvent event, Emitter<AuthState> emit) async {
-    // Set the signInType when loading starts
     emit(state.copyWith(isLoading: true, errorMessage: null, signInType: event.type));
     try {
       if (event.type == AuthSignInType.google) {
@@ -48,7 +48,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       if (response.user == null) {
-        emit(state.copyWith(isLoading: false, errorMessage: 'Login failed. Please check your credentials.', signInType: null));
+        emit(state.copyWith(isLoading: false, errorMessage: 'Login failed.', signInType: null));
       } else {
         emit(state.copyWith(isLoading: false, signInType: null));
       }

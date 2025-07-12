@@ -12,7 +12,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthResponse> signInWithGoogle() async {
-    // ... (rest of the method is unchanged)
     try {
       if (_googleWebClientId == null) throw 'GOOGLE_WEB_CLIENT_ID is not set.';
       final googleSignIn = GoogleSignIn(serverClientId: _googleWebClientId);
@@ -33,7 +32,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthResponse> signUp({required String email, required String password}) async {
-    // ... (rest of the method is unchanged)
     try {
       if (_appRedirectUri == null) throw 'APP_REDIRECT_URI is not set.';
       return await _supabaseClient.auth.signUp(
@@ -62,10 +60,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    // ... (rest of the method is unchanged)
     try {
       final googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
       await _supabaseClient.auth.signOut();
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
