@@ -1,59 +1,60 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
-import '../../domain/repositories/auth_repository.dart';
-import 'events/auth_event.dart';
-import 'states/auth_state.dart';
+import 'package:tabl/features/auth/domain/repositories/auth_repository.dart';
+import 'package:tabl/features/auth/presentation/bloc/events/auth_event.dart';
+import 'package:tabl/features/auth/presentation/bloc/states/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
   AuthBloc(this._authRepository) : super(const AuthState()) {
-    on<AuthSignInEvent>(_onSignIn);
-    on<AuthSignUpRequested>(_onSignUpRequested);
-    on<AuthLoginRequested>(_onLoginRequested);
+    on<SupabaseOAuthSignInRequested>(_onSupabaseOAuthSignIn);
+    on<ClerkSignInRequested>(_onClerkSignIn);
+    on<EmailSignUpRequested>(_onEmailSignUp);
+    on<EmailLoginRequested>(_onEmailLogin);
   }
 
-  FutureOr<void> _onSignIn(AuthSignInEvent event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null, signInType: event.type));
+  FutureOr<void> _onSupabaseOAuthSignIn(
+      SupabaseOAuthSignInRequested event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.supabase));
     try {
-      if (event.type == AuthSignInType.google) {
-        final response = await _authRepository.signInWithGoogle();
-        if (response.user == null) {
-          emit(state.copyWith(isLoading: false, errorMessage: 'Sign in failed.', signInType: null));
-        } else {
-          emit(state.copyWith(isLoading: false, signInType: null));
-        }
-      }
+      await _authRepository.signInWithSupabaseOAuth(event.provider);
+      emit(state.copyWith(isLoading: false, authMethod: null));
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), signInType: null));
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
     }
   }
 
-  FutureOr<void> _onSignUpRequested(AuthSignUpRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null, signInType: AuthSignInType.email));
+  FutureOr<void> _onClerkSignIn(
+      ClerkSignInRequested event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.clerk));
     try {
-      await _authRepository.signUp(email: event.email, password: event.password);
-      emit(state.copyWith(isLoading: false, signInType: null));
+      await _authRepository.signInWithClerk(event.provider);
+      emit(state.copyWith(isLoading: false, authMethod: null));
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), signInType: null));
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
     }
   }
 
-  FutureOr<void> _onLoginRequested(AuthLoginRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null, signInType: AuthSignInType.email));
+  FutureOr<void> _onEmailSignUp(
+      EmailSignUpRequested event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.email));
     try {
-      final response = await _authRepository.signInWithEmail(
-        email: event.email,
-        password: event.password,
-      );
-      if (response.user == null) {
-        emit(state.copyWith(isLoading: false, errorMessage: 'Login failed.', signInType: null));
-      } else {
-        emit(state.copyWith(isLoading: false, signInType: null));
-      }
+      await _authRepository.signUpWithEmail(event.email, event.password);
+      emit(state.copyWith(isLoading: false, authMethod: null));
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), signInType: null));
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
+    }
+  }
+
+  FutureOr<void> _onEmailLogin(
+      EmailLoginRequested event, Emitter<AuthState> emit) async {
+    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.email));
+    try {
+      await _authRepository.signInWithEmail(event.email, event.password);
+      emit(state.copyWith(isLoading: false, authMethod: null));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
     }
   }
 }

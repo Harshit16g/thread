@@ -1,25 +1,32 @@
-import 'package:flutter/material.dart';
+import 'package:clerk_flutter/clerk_flutter.dart' as clerk;
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 @immutable
 abstract class AuthEvent {}
 
-// Restore this enum for tracking UI state
-enum AuthSignInType { google, email }
-
-class AuthSignInEvent extends AuthEvent {
-  final AuthSignInType type;
-  AuthSignInEvent(this.type);
+/// Dispatched when a Supabase-native OAuth provider is selected.
+class SupabaseOAuthSignInRequested extends AuthEvent {
+  final OAuthProvider provider;
+  SupabaseOAuthSignInRequested(this.provider);
 }
 
-class AuthSignUpRequested extends AuthEvent {
-  final String email;
-  final String password;
-  AuthSignUpRequested({required this.email, required this.password});
+/// Dispatched when a Clerk-managed provider is selected.
+class ClerkSignInRequested extends AuthEvent {
+  final clerk.OAuthProvider provider;
+  ClerkSignInRequested(this.provider);
 }
 
-class AuthLoginRequested extends AuthEvent {
+/// Dispatched when the user tries to sign up with email and password.
+class EmailSignUpRequested extends AuthEvent {
   final String email;
   final String password;
-  AuthLoginRequested({required this.email, required this.password});
+  EmailSignUpRequested(this.email, this.password);
+}
+
+/// Dispatched when the user tries to log in with email and password.
+class EmailLoginRequested extends AuthEvent {
+  final String email;
+  final String password;
+  EmailLoginRequested(this.email, this.password);
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tabl/shared/widgets/auth_button.dart';
+import 'package:tabl/shared/widgets/custom_form_field.dart';
 import 'package:tabl/shared/widgets/glass_app_bar.dart';
-import '../../../../shared/widgets/custom_form_field.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/events/auth_event.dart';
 import '../bloc/states/auth_state.dart';
@@ -63,13 +63,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     AuthButton(
                       onPressed: () {
                         context.read<AuthBloc>().add(
-                              AuthSignUpRequested(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim(),
+                              EmailSignUpRequested(
+                                _emailController.text.trim(),
+                                _passwordController.text.trim(),
                               ),
                             );
                       },
-                      isLoading: state.isLoading,
+                      isLoading: state.isLoading && state.authMethod == AuthMethod.email,
                       child: const Text('Sign Up'),
                     ),
                   ],

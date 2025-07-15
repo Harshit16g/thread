@@ -21,10 +21,12 @@ class CustomFormField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
       ),
       obscureText: obscureText,
       keyboardType: keyboardType,
-      // Add validation for production apps
+      style: const TextStyle(color: Colors.white),
     );
   }
 }

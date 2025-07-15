@@ -22,7 +22,6 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveRadius = customBorderRadius ?? BorderRadius.circular(borderRadius);
-
     return ClipRRect(
       borderRadius: effectiveRadius,
       child: BackdropFilter(

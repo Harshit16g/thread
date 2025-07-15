@@ -59,14 +59,14 @@ class _AuthButtonState extends State<AuthButton> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isSolid ? effectiveColor : Color.fromRGBO(76, 86, 107, glassOpacity), // Using blueGrey with opacity
+          color: isSolid ? effectiveColor : Color.fromRGBO(76, 86, 107, glassOpacity),
           borderRadius: BorderRadius.circular(12),
           border: isSolid ? null : Border.all(color: const Color.fromRGBO(255, 255, 255, 0.3)),
           boxShadow: [
             BoxShadow(
               color: const Color.fromRGBO(0, 0, 0, 0.2),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 5),
             ),
           ],
         ),

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tabl/features/auth/presentation/screens/login_screen.dart';
 import 'package:tabl/features/auth/presentation/screens/signup_screen.dart';
-import 'package:tabl/features/auth/presentation/widgets/oauth_providers_drawer.dart';
+import 'package:tabl/features/auth/presentation/widgets/clerk_providers_drawer.dart';
 import 'package:tabl/shared/widgets/auth_button.dart';
 import 'package:tabl/shared/widgets/glass_container.dart';
 import 'package:video_player/video_player.dart';
 import '../bloc/auth_bloc.dart';
+import '../bloc/events/auth_event.dart';
 import '../bloc/states/auth_state.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -36,13 +38,13 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _showProvidersDrawer(BuildContext context) {
+  void _showClerkProvidersDrawer(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: BlocProvider.of<AuthBloc>(context),
-        child: const OAuthProvidersDrawer(),
+        child: const ClerkProvidersDrawer(),
       ),
     );
   }
@@ -83,12 +85,19 @@ class _AuthScreenState extends State<AuthScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         AuthButton(
-                          onPressed: () => _showProvidersDrawer(context),
-                          isLoading: state.isLoading,
+                          onPressed: () => context.read<AuthBloc>().add(SupabaseOAuthSignInRequested(OAuthProvider.google)),
+                          isLoading: state.isLoading && state.authMethod == AuthMethod.supabase,
                           style: AuthButtonStyle.solid,
                           solidColor: Colors.black,
                           solidTextColor: Colors.white,
-                          child: const Text('Continue with a Provider'),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.g_mobiledata_outlined),
+                              SizedBox(width: 12),
+                              Text('Continue with Google'),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16.0),
                         AuthButton(
@@ -99,6 +108,12 @@ class _AuthScreenState extends State<AuthScreen> {
                         AuthButton(
                           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen())),
                           child: const Text('Log in with Email'),
+                        ),
+                        const SizedBox(height: 16.0),
+                        AuthButton(
+                          onPressed: () => _showClerkProvidersDrawer(context),
+                          isLoading: state.isLoading && state.authMethod == AuthMethod.clerk,
+                          child: const Text('More Sign-In Options'),
                         ),
                       ],
                     );

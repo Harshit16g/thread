@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1073548636386",
+    "project_id": "oeeez-online",
+    "storage_bucket": "oeeez-online.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1073548636386:android:c260b5f32a1cd33dd7eebb",
+        "android_client_info": {
+          "package_name": "com.oeeez.oeon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzx_ycJ2ZQrschSwMhkRMEYZO_P6WBjOA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
