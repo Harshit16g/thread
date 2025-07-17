@@ -14,6 +14,9 @@ class EmailServiceImpl implements EmailService {
     final apiKey = dotenv.env['RESEND_API_KEY'];
     if (apiKey == null) throw 'RESEND_API_KEY not set';
     
+    final senderEmail = dotenv.env['RESEND_SENDER_EMAIL'];
+    if (senderEmail == null) throw 'RESEND_SENDER_EMAIL not set';
+
     try {
       await _dio.post(
         'https://api.resend.com/emails',
@@ -24,7 +27,7 @@ class EmailServiceImpl implements EmailService {
           },
         ),
         data: {
-          'from': 'noreply@yourdomain.com',
+          'from': senderEmail,
           'to': [to],
           'subject': subject,
           'html': html,
@@ -44,6 +47,11 @@ class EmailServiceImpl implements EmailService {
     final apiKey = dotenv.env['BREVO_API_KEY'];
     if (apiKey == null) throw 'BREVO_API_KEY not set';
     
+    final campaignIdInt = int.tryParse(campaignId);
+    if (campaignIdInt == null) {
+      throw FormatException('Invalid campaignId: $campaignId');
+    }
+
     try {
       await _dio.post(
         'https://api.brevo.com/v3/smtp/email',
@@ -55,7 +63,7 @@ class EmailServiceImpl implements EmailService {
         ),
         data: {
           'to': recipients.map((email) => {'email': email}).toList(),
-          'templateId': int.parse(campaignId),
+          'templateId': campaignIdInt,
           'params': templateData,
         },
       );

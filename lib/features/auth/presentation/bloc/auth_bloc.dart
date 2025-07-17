@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:tabl/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tabl/features/auth/presentation/bloc/events/auth_event.dart';
 import 'package:tabl/features/auth/presentation/bloc/states/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
-  StreamSubscription? _authStateSubscription;
+  StreamSubscription<sb.AuthState>? _authStateSubscription;
 
   AuthBloc(this._authRepository) : super(const AuthInitial()) {
     on<CheckAuthStatus>(_onCheckAuthStatus);
@@ -14,10 +15,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<EmailSignUpRequested>(_onEmailSignUp);
     on<EmailLoginRequested>(_onEmailLogin);
     on<SignOutRequested>(_onSignOut);
-    
-    // Listen to auth state changes
-    _authStateSubscription = _authRepository.authStateChanges.listen((authState) {
-      add(CheckAuthStatus());
+    on<AuthLoadingDismissed>(_onAuthLoadingDismissed);
+
+    _authStateSubscription =
+        _authRepository.authStateChanges.listen((authState) {
+      if (authState.session != null) {
+        add(CheckAuthStatus());
+      }
     });
   }
 
@@ -36,7 +40,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading(authMethod: AuthMethod.oauth));
     try {
       await _authRepository.signInWithOAuth(event.provider);
-      // Auth state will be updated by the listener
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -47,7 +50,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading(authMethod: AuthMethod.email));
     try {
       await _authRepository.signUpWithEmail(event.email, event.password);
-      // Auth state will be updated by the listener
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -58,7 +60,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading(authMethod: AuthMethod.email));
     try {
       await _authRepository.signInWithEmail(event.email, event.password);
-      // Auth state will be updated by the listener
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -72,6 +73,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       emit(AuthError(e.toString()));
     }
+  }
+
+  FutureOr<void> _onAuthLoadingDismissed(
+      AuthLoadingDismissed event, Emitter<AuthState> emit) {
+    emit(state.copyWith(isLoading: false));
   }
 
   @override

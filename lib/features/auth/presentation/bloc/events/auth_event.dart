@@ -40,3 +40,5 @@ class EmailLoginRequested extends AuthEvent {
 }
 
 class SignOutRequested extends AuthEvent {}
+
+class AuthLoadingDismissed extends AuthEvent {}
