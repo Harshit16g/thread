@@ -1,8 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tabl/features/auth/presentation/screens/login_screen.dart';
 import 'package:tabl/features/auth/presentation/screens/signup_screen.dart';
+import 'package:tabl/features/home/presentation/screens/home_screen.dart';
 import 'package:tabl/shared/widgets/auth_button.dart';
 import 'package:tabl/shared/widgets/glass_container.dart';
 import 'package:video_player/video_player.dart';
@@ -38,6 +40,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   void _showOAuthProviders(BuildContext context) {
+    _controller.pause();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -46,84 +49,133 @@ class _AuthScreenState extends State<AuthScreen> {
         value: BlocProvider.of<AuthBloc>(context),
         child: _OAuthProvidersSheet(),
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) {
+        _controller.play();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          FittedBox(
-            fit: BoxFit.cover,
-            child: _controller.value.isInitialized
-                ? SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
-                  )
-                : const SizedBox(),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: GlassContainer(
-              borderRadius: 0,
-              customBorderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24.0),
-                topRight: Radius.circular(24.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  24, 24, 24,
-                  MediaQuery.of(context).padding.bottom + 24,
+      body: BlocListener<AuthBloc, auth_states.AuthState>(
+        listener: (context, state) {
+          if (state is auth_states.AuthAuthenticated) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+          } else if (state is auth_states.AuthError) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // OAuth button
-                    AuthButton(
-                      onPressed: () => _showOAuthProviders(context),
-                      style: AuthButtonStyle.solid,
-                      solidColor: Colors.black,
-                      solidTextColor: Colors.white,
-                      child: const Text('OAuth'),
-                    ),
-                    const SizedBox(height: 16.0),
-                    
-                    // Signup button
-                    AuthButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider.value(
-                            value: context.read<AuthBloc>(),
-                            child: const SignUpScreen(),
-                          ),
-                        ),
+              );
+          }
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FittedBox(
+              fit: BoxFit.cover,
+              child: _controller.value.isInitialized
+                  ? SizedBox(
+                      width: _controller.value.size.width,
+                      height: _controller.value.size.height,
+                      child: VideoPlayer(_controller),
+                    )
+                  : const SizedBox(),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: GlassContainer(
+                borderRadius: 0,
+                customBorderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24.0),
+                  topRight: Radius.circular(24.0),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    24, 24, 24,
+                    MediaQuery.of(context).padding.bottom + 24,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // OAuth button
+                      AuthButton(
+                        onPressed: () => _showOAuthProviders(context),
+                        style: AuthButtonStyle.solid,
+                        solidColor: Colors.black,
+                        solidTextColor: Colors.white,
+                        child: const Text('OAuth'),
                       ),
-                      child: const Text('Signup'),
-                    ),
-                    const SizedBox(height: 16.0),
-                    
-                    // Login button
-                    AuthButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider.value(
-                            value: context.read<AuthBloc>(),
-                            child: const LoginScreen(),
-                          ),
-                        ),
+                      const SizedBox(height: 16.0),
+
+                      // Signup button
+                      AuthButton(
+                        onPressed: () {
+                          _controller.pause();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => BlocProvider.value(
+                                value: context.read<AuthBloc>(),
+                                child: const SignUpScreen(),
+                              ),
+                            ),
+                          ).then((_) {
+                            if (mounted) {
+                              _controller.play();
+                            }
+                          });
+                        },
+                        child: const Text('Signup'),
                       ),
-                      child: const Text('Login'),
-                    ),
-                  ],
+                      const SizedBox(height: 16.0),
+
+                      // Login button
+                      AuthButton(
+                        onPressed: () {
+                          _controller.pause();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => BlocProvider.value(
+                                value: context.read<AuthBloc>(),
+                                child: const LoginScreen(),
+                              ),
+                            ),
+                          ).then((_) {
+                            if (mounted) {
+                              _controller.play();
+                            }
+                          });
+                        },
+                        child: const Text('Login'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            BlocBuilder<AuthBloc, auth_states.AuthState>(
+              builder: (context, state) {
+                if (state.isLoading) {
+                  return Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
