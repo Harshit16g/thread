@@ -1,29 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/auth/presentation/screens/auth_screen.dart';
-import 'features/shell/presentation/screens/main_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tabl/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:tabl/features/auth/presentation/bloc/events/auth_event.dart';
+import 'package:tabl/features/auth/presentation/bloc/states/auth_state.dart';
+import 'package:tabl/features/auth/presentation/screens/auth_screen.dart';
+import 'package:tabl/features/home/presentation/screens/home_screen.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Revert to listening to the Supabase auth stream
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+  State<AuthGate> createState() => _AuthGateState();
+}
 
-        final session = snapshot.data?.session;
-        if (session == null) {
-          return const AuthScreen();
+class _AuthGateState extends State<AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AuthBloc>().add(CheckAuthStatus());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is AuthAuthenticated) {
+          return const HomeScreen();
         }
-        
-        return const MainScreen();
+        return const AuthScreen();
       },
     );
   }

@@ -1,4 +1,4 @@
-package com.example.myapp
+package com.oeeez.oeon
 
 import io.flutter.embedding.android.FlutterFragmentActivity // Import this
 import io.flutter.embedding.engine.FlutterEngine

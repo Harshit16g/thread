@@ -6,55 +6,77 @@ import 'package:tabl/features/auth/presentation/bloc/states/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  StreamSubscription? _authStateSubscription;
 
-  AuthBloc(this._authRepository) : super(const AuthState()) {
+  AuthBloc(this._authRepository) : super(const AuthInitial()) {
+    on<CheckAuthStatus>(_onCheckAuthStatus);
     on<SupabaseOAuthSignInRequested>(_onSupabaseOAuthSignIn);
-    on<ClerkSignInRequested>(_onClerkSignIn);
     on<EmailSignUpRequested>(_onEmailSignUp);
     on<EmailLoginRequested>(_onEmailLogin);
+    on<SignOutRequested>(_onSignOut);
+    
+    // Listen to auth state changes
+    _authStateSubscription = _authRepository.authStateChanges.listen((authState) {
+      add(CheckAuthStatus());
+    });
+  }
+
+  FutureOr<void> _onCheckAuthStatus(
+      CheckAuthStatus event, Emitter<AuthState> emit) async {
+    final user = _authRepository.currentUser;
+    if (user != null) {
+      emit(AuthAuthenticated(user));
+    } else {
+      emit(const AuthUnauthenticated());
+    }
   }
 
   FutureOr<void> _onSupabaseOAuthSignIn(
       SupabaseOAuthSignInRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.supabase));
+    emit(const AuthLoading(authMethod: AuthMethod.oauth));
     try {
-      await _authRepository.signInWithSupabaseOAuth(event.provider);
-      emit(state.copyWith(isLoading: false, authMethod: null));
+      await _authRepository.signInWithOAuth(event.provider);
+      // Auth state will be updated by the listener
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
-    }
-  }
-
-  FutureOr<void> _onClerkSignIn(
-      ClerkSignInRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.clerk));
-    try {
-      await _authRepository.signInWithClerk(event.provider);
-      emit(state.copyWith(isLoading: false, authMethod: null));
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
+      emit(AuthError(e.toString()));
     }
   }
 
   FutureOr<void> _onEmailSignUp(
       EmailSignUpRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.email));
+    emit(const AuthLoading(authMethod: AuthMethod.email));
     try {
       await _authRepository.signUpWithEmail(event.email, event.password);
-      emit(state.copyWith(isLoading: false, authMethod: null));
+      // Auth state will be updated by the listener
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
+      emit(AuthError(e.toString()));
     }
   }
 
   FutureOr<void> _onEmailLogin(
       EmailLoginRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, authMethod: AuthMethod.email));
+    emit(const AuthLoading(authMethod: AuthMethod.email));
     try {
       await _authRepository.signInWithEmail(event.email, event.password);
-      emit(state.copyWith(isLoading: false, authMethod: null));
+      // Auth state will be updated by the listener
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), authMethod: null));
+      emit(AuthError(e.toString()));
     }
+  }
+
+  FutureOr<void> _onSignOut(
+      SignOutRequested event, Emitter<AuthState> emit) async {
+    try {
+      await _authRepository.signOut();
+      emit(const AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
   }
 }

@@ -1,32 +1,42 @@
-import 'package:clerk_flutter/clerk_flutter.dart' as clerk;
-import 'package:flutter/foundation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-@immutable
-abstract class AuthEvent {}
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+  
+  @override
+  List<Object?> get props => [];
+}
 
-/// Dispatched when a Supabase-native OAuth provider is selected.
+class CheckAuthStatus extends AuthEvent {}
+
 class SupabaseOAuthSignInRequested extends AuthEvent {
   final OAuthProvider provider;
-  SupabaseOAuthSignInRequested(this.provider);
+  
+  const SupabaseOAuthSignInRequested(this.provider);
+  
+  @override
+  List<Object?> get props => [provider];
 }
 
-/// Dispatched when a Clerk-managed provider is selected.
-class ClerkSignInRequested extends AuthEvent {
-  final clerk.OAuthProvider provider;
-  ClerkSignInRequested(this.provider);
-}
-
-/// Dispatched when the user tries to sign up with email and password.
 class EmailSignUpRequested extends AuthEvent {
   final String email;
   final String password;
-  EmailSignUpRequested(this.email, this.password);
+  
+  const EmailSignUpRequested(this.email, this.password);
+  
+  @override
+  List<Object?> get props => [email, password];
 }
 
-/// Dispatched when the user tries to log in with email and password.
 class EmailLoginRequested extends AuthEvent {
   final String email;
   final String password;
-  EmailLoginRequested(this.email, this.password);
+  
+  const EmailLoginRequested(this.email, this.password);
+  
+  @override
+  List<Object?> get props => [email, password];
 }
+
+class SignOutRequested extends AuthEvent {}
