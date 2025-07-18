@@ -1,42 +1,104 @@
-# Theming and UI Style Guide
+# TabL: UI Design System & Theming Guide
+*Version 1.0, January 2025*
 
-This document defines the visual identity of the TabL application, ensuring a consistent and elegant user experience.
+---
 
-## 1. Color Palette
+## 1. Introduction
+This document provides a comprehensive guide to the UI Design System for the TabL application. Its purpose is to ensure a consistent, accessible, and visually appealing user experience across all features and platforms.
 
--   **Primary Brand Color**: `#075E54` (A deep, classic green). This is used for native elements like the adaptive icon background and splash screen.
--   **Primary Gradient**: A linear gradient from `#075E54` to `#128C7E` is used as the background for the Login and Sign-up screens to provide a rich, visually appealing backdrop.
--   **Glassmorphism Tint**: A semi-transparent "slate blue" (`Colors.blueGrey.withOpacity(0.25)`) is used for the glass-style buttons on the main authentication screen to ensure text is legible over the video background.
--   **Solid Button (Google)**: The primary call-to-action button uses a solid black background (`#000000`) with white text for high contrast and emphasis.
+All UI development should adhere to the standards defined in this document. The core theme files are located in `lib/core/theme/`.
 
-## 2. Typography
+## 2. Core Design Principles
+-   **Clarity**: The UI should be clean, intuitive, and easy to navigate.
+-   **Consistency**: Components, colors, and typography should be used consistently throughout the app to create a unified experience.
+-   **Accessibility**: The app must be usable by everyone. This includes providing sufficient color contrast, supporting dynamic font sizes, and ensuring screen reader compatibility.
+-   **Feedback**: The UI should provide immediate and clear feedback for all user interactions through animations, loading states, and haptics.
 
--   **Default Font**: The application uses the standard Flutter `MaterialApp` font, which defaults to Roboto on Android and San Francisco on iOS.
--   **Button Text**: Text on all major buttons uses a bold font weight (`FontWeight.bold`) and a font size of `16.0` for clarity and impact.
+## 3. Color System
+We use a structured color system based on Material Design 3 principles. The primary color palette is defined in `lib/core/theme/app_colors.dart`.
 
-## 3. Component Library (`lib/shared/widgets/`)
+| Name                 | Light Theme                                   | Dark Theme                                    | Usage                               |
+| -------------------- | --------------------------------------------- | --------------------------------------------- | ----------------------------------- |
+| **Primary**          | `0xFF6750A4` (Deep Purple)                    | `0xFFD0BCFF` (Light Purple)                   | Interactive elements, buttons, FABs |
+| **On Primary**       | `0xFFFFFFFF` (White)                          | `0xFF381E72` (Dark Purple)                    | Text/icons on top of Primary      |
+| **Primary Container**| `0xFFEADDFF` (Light Purple)                   | `0xFF4F378B` (Medium Purple)                  | Backgrounds for primary elements  |
+| **Secondary**        | `0xFF625B71` (Medium Gray)                    | `0xFFCCC2DC` (Light Gray)                     | Secondary buttons, filters        |
+| **Surface**          | `0xFFFFFBFE` (Near White)                     | `0xFF1C1B1F` (Near Black)                     | Card backgrounds, sheets, dialogs |
+| **On Surface**       | `0xFF1C1B1F` (Near Black)                     | `0xFFE6E1E5` (Light Gray)                     | Primary text color                |
+| **On Surface Variant**| `0xFF49454F` (Gray)                           | `0xFFCAC4D0` (Gray)                           | Secondary text, subtitles, hints  |
+| **Error**            | `0xFFB3261E` (Red)                            | `0xFFF2B8B5` (Light Red)                      | Error messages, invalid fields    |
+| **Success (Custom)** | `0xFF2E7D32` (Green)                          | `0xFF66BB6A` (Light Green)                    | Success indicators, confirmations |
 
-To maintain consistency, we use a library of shared, reusable UI components.
+---
 
-### `AuthButton`
+## 4. Typography System
+Our typography system, defined in `lib/core/theme/app_text_styles.dart`, provides a hierarchy of text styles for different purposes.
 
--   **Description**: A stateful, versatile button that serves as the primary action component in the app.
--   **Features**:
-    -   **Drop Shadow**: A `BoxShadow` provides a "lift" effect, making the button feel tangible.
-    -   **Pressed State**: The button provides visual feedback on press. Solid buttons invert their color, while glass buttons become more opaque.
-    -   **Styles**: Supports two main styles via the `AuthButtonStyle` enum:
-        -   `AuthButtonStyle.solid`: A solid-color button for primary actions (e.g., Google Sign-In).
-        -   `AuthButtonStyle.glass`: A semi-transparent, blurred button for a modern glassmorphism effect.
-    -   **Loading Indicator**: Displays a `CircularProgressIndicator` when its `isLoading` property is true.
+| Style Name          | Font Size | Font Weight | Usage                               |
+| ------------------- | --------- | ----------- | ----------------------------------- |
+| `displayLarge`      | 57        | `w400`      | Hero text, large screen titles      |
+| `headlineLarge`     | 32        | `w400`      | Screen titles                       |
+| `titleLarge`        | 22        | `w500`      | Card titles, dialog titles        |
+| `titleMedium`       | 16        | `w500`      | List item titles, subtitles       |
+| `bodyLarge`         | 16        | `w400`      | Main body text, descriptions      |
+| `bodyMedium`        | 14        | `w400`      | Secondary body text, captions     |
+| `labelLarge`        | 14        | `w500`      | Button text, interactive labels   |
 
-### `GlassContainer` & `GlassAppBar`
+---
 
--   **Description**: These widgets are the foundation of our "glassmorphism" UI.
--   **`GlassContainer`**: Uses a `BackdropFilter` with `ImageFilter.blur` to create a frosted glass effect over any content behind it. It supports customizable border radiuses.
--   **`GlassAppBar`**: A specialized, transparent `AppBar` built using `GlassContainer`, ensuring a consistent, elegant look on screens like Login and Sign-up.
+## 5. Spacing System
+Consistent spacing is crucial for a clean layout. We use a base unit of `8.0` pixels. Spacing constants are defined in `lib/core/constants/app_spacing.dart`.
+
+| Name    | Value  | Usage                                   |
+| ------- | ------ | --------------------------------------- |
+| `xs`    | `4.0`  | Extra small padding, icon spacing       |
+| `sm`    | `8.0`  | Small padding within components         |
+| `md`    | `16.0` | Standard padding between components     |
+| `lg`    | `24.0` | Large padding for screen sections       |
+| `xl`    | `32.0` | Extra large padding                     |
+
+---
+
+## 6. Core UI Component Library
+To ensure consistency, all developers should use the shared widgets from `lib/shared/widgets/` whenever possible.
+
+### `PrimaryButton`
+-   **Purpose**: The standard call-to-action button.
+-   **Usage**:
+    ```dart
+    PrimaryButton(
+      onPressed: () { /* ... */ },
+      text: 'Confirm Action',
+      isLoading: state is AuthLoading,
+    )
+    ```
+
+### `GlassContainer`
+-   **Purpose**: A container with a frosted glass effect, used for app bars, bottom navigation, and cards.
+-   **Usage**:
+    ```dart
+    GlassContainer(
+      borderRadius: 16.0,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Text('Frosted Glass Content'),
+      ),
+    )
+    ```
 
 ### `CustomFormField`
+-   **Purpose**: The standard text input field for all forms.
+-   **Usage**:
+    ```dart
+    CustomFormField(
+      controller: _emailController,
+      labelText: 'Email',
+      keyboardType: TextInputType.emailAddress,
+      validator: (value) => Validators.validateEmail(value),
+    )
+    ```
+---
 
--   **Description**: A standardized `TextFormField` with a consistent border radius and styling, used for all text input in the authentication flow.
-
-This design system ensures that all parts of the app have a unified and polished look and feel.
+## 7. Iconography
+-   **Primary Icon Set**: We will use the standard Material Icons provided by the Flutter SDK.
+-   **Custom Icons**: Any custom icons (e.g., for the native token) should be in SVG format and stored in `assets/icons/`.
