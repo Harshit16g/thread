@@ -19,12 +19,12 @@ val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toI
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
-    namespace = "com.example.myapp"
+    namespace = "com.oeeez.oeon"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        applicationId = "com.example.myapp"
+        applicationId = "com.oeeez.oeon"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode

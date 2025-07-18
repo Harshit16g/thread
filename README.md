@@ -1,171 +1,39 @@
+# TabL Super-App
 
-# 🌐 TabL
+**TabL** is a next-generation, decentralized super-app built with Flutter. Our vision is to create a secure, peer-to-peer ecosystem where users can seamlessly offer and consume services, manage community news, and participate in a native token economy.
 
-> A decentralized super-app built with Flutter — combining a multi-service marketplace, ride-sharing, rentals, food services, voting, community news, and a native token economy.
-
----
-
-## 🎯 Vision
-TabL is designed to:
-- Empower users to **offer and consume peer-to-peer services**: rides, deliveries, rentals, tiffin, etc.
-- **Verify and onboard** new users in a decentralized, community-driven way.
-- Introduce a **native token** for payments, rewards, and voting.
-- Deliver **real-time, community-driven news**.
-- Prevent fraud through **hardware tagging, IP tagging, and an immutable transaction chain**.
+This project is built with a focus on security, scalability, and a developer-friendly workflow, leveraging a modern tech stack centered around Flutter and Supabase.
 
 ---
 
-## 🚀 Tech Stack
+## Key Features
 
-| Area         | Technology                          |
-| ------------ | ----------------------------------- |
-| UI           | Flutter                             |
-| Auth         | Supabase OAuth                      |
-| Backend DB   | Neon (PostgreSQL) + Supabase ORM    |
-| Realtime     | Supabase Realtime + Upstash Redis   |
-| Native Token | Internal ledger → planned blockchain|
-| Maps         | Google Maps SDK                     |
-| Storage      | Supabase Storage                    |
-| Monitoring   | Sentry                              |
-| Anti-fraud   | Device fingerprinting, IP tagging   |
+-   **Peer-to-Peer Marketplace**: A decentralized platform for users to offer and book services like rides, item rentals, and local food delivery.
+-   **Community News Feed**: A hyperlocal, user-driven news feed.
+-   **Native Token Wallet**: An integrated wallet for managing the in-app token, facilitating transactions within the ecosystem.
+-   **Security-First Design**: Advanced fraud prevention through hardware and IP address tagging to ensure a trusted environment.
+-   **Scalable Architecture**: Built on a modern, Supabase-first architecture that is designed for growth and easy maintenance.
 
 ---
 
-## 🧩 Key Features
+## Project Documentation
 
-- ✅ Multi-service marketplace (rides, rentals, food, delivery, etc.)
-- ✅ Users can act as providers & consumers
-- ✅ Decentralized user verification & referral system
-- ✅ Native token for payments, rewards, and governance
-- ✅ Voting & proposal system
-- ✅ Real-time community news
-- ✅ Hardware/IP tagging & immutable transaction logs for fraud prevention
+This project maintains comprehensive documentation to ensure clarity and guide development. For a complete overview and to dive into specific topics, please start with our **Documentation Hub**.
 
----
+-   **[Click here to visit the Documentation Hub](./docs/DOCUMENTATION_HUB.md)**
 
-## 📦 Project Structure (proposed)
-
-```plaintext
-lib/
-├── main.dart
-├── core/                  # Shared services, constants, utils, theming
-├── features/              # Modular, feature-first design
-│   ├── auth/              # Sign up, login, decentralized verification
-│   ├── marketplace/       # Service listing & booking flows
-│   ├── ridesharing/       # Ride-sharing module
-│   ├── rentals/           # Home rentals listing
-│   ├── food/              # Tiffin & restaurant services
-│   ├── wallet/            # Native token management
-│   ├── voting/            # Community proposals & governance
-│   ├── news/              # News & announcements
-│   └── transactions/      # Immutable transaction chain & logs
-├── models/                # Data models
-├── blocs/ or cubits/      # State management
-├── ui/                    # Common screens, widgets, components
-└── services/              # External integrations (maps, storage, API)
-
-> 🧪 Follows a feature-first structure for scalability & modularity.
-
-```
----
-
-## 📈 Development Path
-
-See: 📄 [Development Plan & Roadmap](docs/DEVELOPMENT_PLAN.md)
+The hub provides links to all critical documents, including:
+-   **Architectural Foundation & Integration Strategy**
+-   **Development Plan & Roadmap**
+-   **API Design & Data Models**
+-   **And more...**
 
 ---
 
-## 🛠 Architecture Diagram
-```mermaid
-flowchart TD
-  subgraph Client[Flutter Mobile App]
-    direction TB
-    UI[User Interface -Flutter]
-    DeviceTag[Hardware Tagging & Device Fingerprint]
-    IPTag[IP Tagging & Geolocation]
-  end
+## Getting Started
 
-  subgraph Backend[Backend Services]
-    direction TB
-    Supabase[Supabase -Auth, Realtime, Storage, ORM]
-    Neon[Neon PostgreSQL -Tx Logs, Listings, Users]
-    Redis[Upstash Redis -Caching, Pub/Sub]
-    Maps[Google Maps SDK -Location, Directions]
-    Token[Native Token Ledger -internal → blockchain]
-  end
-
-  subgraph Monitoring
-    Sentry[Sentry - Error & Crash Monitoring]
-  end
-
-  %% Connections
-  UI --> Supabase
-  UI --> Maps
-  UI --> Redis
-  UI --> Token
-  DeviceTag --> Supabase
-  IPTag --> Supabase
-  Supabase --> Neon
-  Supabase --> Redis
-  Supabase --> Token
-  UI --> Sentry
-```
----
-
-## 🤝 Contributing
-
-1. Clone the repository:
-
-git clone https://github.com/your-org/tabl.git
-
-
-2. Install dependencies:
-
-flutter pub get
-
-
-3. Run the app:
-
-flutter run
-
-
-4. Create a feature branch:
-
-git checkout -b feat/my-feature
-
-
-5. Commit, push, and open a pull request.
-
-
-
-> Please follow the guidelines in CONTRIBUTING.md.
-![contribution.md](docs/contribution.md)
-
-
+To get started with development, please refer to the **[Contribution Guidelines](./docs/Contribution.md)**.
 
 ---
 
-## 🛡 Security & Privacy
-
-Decentralized verification by trusted users
-
-Encrypted storage for KYC data
-
-Hardware tagging & IP tagging to detect duplicate or fake accounts
-
-Immutable transaction logs to ensure transparency
-
-
-
----
-
-## 🧠 License
-
-MIT (or another license of your choice)
-
-
----
-
-Built with ❤️ using Flutter, Supabase, Neon, Upstash, Sentry, and open-source spirit.
-
----
+*This project is currently under active development. For the latest updates, please refer to the Development Plan.*

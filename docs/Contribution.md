@@ -1,117 +1,74 @@
-
-# 🤝 Contributing to TabL
-
-Thanks for your interest in contributing to **TabL**!  
-Together, we’re building an open, decentralized service marketplace built on Flutter, Supabase, Neon, and more.
-
-Please read this guide before you start.
+# TabL: Contribution Guidelines
+*Version 1.0, January 2025*
 
 ---
 
-## 🚀 How to Start
+## Introduction
+Thank you for your interest in contributing to the TabL Super-App! These guidelines are designed to ensure a smooth, consistent, and effective development workflow for everyone involved.
 
-1. **Fork the repository**
-   - Click “Fork” in the top right corner on GitHub.
-
-2. **Clone your fork locally**
-   ```bash
-   git clone https://github.com/harshit16g/tabl.git
-   cd tabl
-   ```
-
-3. **Install dependencies**
-   
-```
-*flutter pub get*
-```
-
-4. **Create a new branch**
-   
-```
-*git checkout -b feat/your-feature-name*
-```
-
-5. **Start coding!**
-
-
-
+By following these guidelines, you help us maintain a high standard of code quality and architectural integrity. Before you begin, please make sure you have read and understood the **[Architectural Foundation document](./Architectural_Foundation_and_Integration_Strategy.md)**.
 
 ---
 
-## 🧩 Code Guidelines
-
-Follow our feature-first structure (see README.md).
-
-Use meaningful, descriptive names for variables, files, and branches.
-
-Keep PRs focused: fix a bug, add a feature, or improve docs — but don’t mix unrelated changes.
-
-Write clear commit messages:
-
-feat(auth): add Google OAuth login
-fix(wallet): correct token balance rounding issue
-docs: improve installation guide
-
-For major features, create an issue first and discuss before starting.
-
-
+## 1. Code of Conduct
+All contributors are expected to adhere to a professional and respectful code of conduct. We are building a collaborative community, and all interactions should be positive and constructive.
 
 ---
 
-## 🧪 Testing
-
-Test locally before opening a pull request:
-
-flutter run
-
-Prefer writing small unit tests or widget tests if you add logic.
-
-Make sure the app builds cleanly (flutter analyze and flutter test).
-
-
-
----
-
-## 📦 Opening a Pull Request
-
-When you’re ready:
-
-1. Push your branch:
-
-git push origin feat/your-feature-name
-
-
-2. Go to your fork on GitHub → “Compare & pull request”.
-
-
-3. Fill out ![pull request template](PULL_REQUEST_TEMPLATE.md):
-
-What does this change add/fix?
-
-Any context or screenshots.
-
-Linked issue number (if exists).
-
-
-
-
+## 2. Setting Up Your Development Environment
+1.  **Install Flutter**: Ensure you have the latest stable version of the Flutter SDK installed.
+2.  **Clone the Repository**: `git clone <repository_url>`
+3.  **Create Your Environment File**:
+    -   Copy the `.env.example` file to a new file named `.env.dev`.
+    -   Fill in the required credentials for the development Supabase project. **Do not use production keys in your development environment.**
+4.  **Install Dependencies**: Run `flutter pub get` in your terminal.
+5.  **Run the App**: Launch the app using the development environment configuration:
+    ```bash
+    flutter run --dart-define-from-file=.env.dev
+    ```
 
 ---
 
-## 📜 ![code of conduct](CODE_OF_CONDUCT.md)
+## 3. Branching Strategy
+We use a simplified GitFlow branching model.
 
-By participating, you agree to follow our Code of Conduct.
+-   `main`: This branch represents the latest stable, production-ready code. Direct pushes to `main` are forbidden.
+-   `develop`: This is the primary development branch. All feature branches are created from `develop` and merged back into it.
+-   **Feature Branches**: All new features, bug fixes, or enhancements should be developed on a dedicated feature branch.
 
-We value respectful, constructive collaboration ❤️.
-
-
----
-
-## 🙌 Thanks!
-
-We appreciate your effort in helping make TabL better for everyone.
-Let’s build something great, open, and community‑driven!
+#### **Branch Naming Convention:**
+-   **Features**: `feature/<feature-name>` (e.g., `feature/wallet-transactions`)
+-   **Bug Fixes**: `fix/<bug-description>` (e.g., `fix/login-button-overflow`)
+-   **Chores/Refactoring**: `chore/<task-description>` (e.g., `chore/refactor-auth-widgets`)
 
 ---
 
+## 4. The Development Workflow
+1.  **Pull the Latest `develop`**: Before starting any new work, ensure your `develop` branch is up to date: `git checkout develop && git pull origin develop`.
+2.  **Create a Feature Branch**: Create your new branch from `develop`: `git checkout -b feature/your-feature-name`.
+3.  **Develop Your Feature**:
+    -   Write your code, following the architectural patterns and coding style.
+    -   Ensure your feature is self-contained within a feature directory (`lib/features/your_feature`).
+    -   Add comments to your code where necessary to explain complex logic.
+4.  **Run Local Checks**: Before submitting your code for review, run the following checks locally:
+    -   `flutter analyze` to check for any static analysis issues.
+    -   `flutter test` to ensure all existing and new tests are passing.
+5.  **Submit a Pull Request**:
+    -   Push your feature branch to the remote repository.
+    -   Create a new Pull Request (PR) from your feature branch into the `develop` branch.
+    -   Fill out the **[Pull Request Template](./PULL_REQUEST_TEMPLATE.md)** completely. A well-documented PR is much easier and faster to review.
 
+---
+
+## 5. Coding Style and Standards
+-   **Linting**: We adhere to the rules defined in the `analysis_options.yaml` file. Please ensure your code has no linting errors before submitting a PR.
+-   **Formatting**: We use the default Flutter code formatter (`dart format`).
+-   **Immutability**: Strive to use immutable data structures wherever possible. Use `const` for constructors where applicable.
+-   **Final Fields**: Class fields should be `final` unless they are explicitly designed to be mutable.
+
+---
+
+## 6. Code Reviews
+-   All pull requests must be reviewed and approved by at least one other developer before being merged.
+-   Reviewers should provide clear, constructive feedback.
+-   The author of the PR is responsible for addressing all comments and ensuring their code meets the project standards before the PR is merged.

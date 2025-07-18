@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../features/auth/presentation/screens/auth_screen.dart';
-import '../../features/shell/presentation/screens/main_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tabl/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:tabl/features/auth/presentation/bloc/events/auth_event.dart';
+import 'package:tabl/features/auth/presentation/bloc/states/auth_state.dart';
+import 'package:tabl/features/auth/presentation/screens/auth_screen.dart';
+import 'package:tabl/features/home/presentation/screens/home_screen.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AuthBloc>().add(CheckAuthStatus());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Listen to the auth state changes from Supabase
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        // If the stream has data, check if there's a session
-        if (snapshot.hasData) {
-          final session = snapshot.data?.session;
-          // If there is no active session, show the AuthScreen
-          if (session == null) {
-            return const AuthScreen();
-          }
-          // If there is a session, show the MainScreen
-          return const MainScreen();
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is AuthAuthenticated) {
+          return const HomeScreen();
         }
-        // While waiting for the auth state, show a loading indicator
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+        return const AuthScreen();
       },
     );
   }

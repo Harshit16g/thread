@@ -1,74 +1,70 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/repositories/auth_repository.dart';
+import 'package:tabl/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final SupabaseClient _supabaseClient;
-  final String? _googleWebClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
-  final String? _appRedirectUri = dotenv.env['APP_REDIRECT_URI'];
+  final SupabaseClient _supabase;
+  final GoogleSignIn _googleSignIn;
 
-  AuthRepositoryImpl(this._supabaseClient);
+  AuthRepositoryImpl(this._supabase, this._googleSignIn);
 
   @override
-  Future<AuthResponse> signInWithGoogle() async {
-    // ... (rest of the method is unchanged)
-    try {
-      if (_googleWebClientId == null) throw 'GOOGLE_WEB_CLIENT_ID is not set.';
-      final googleSignIn = GoogleSignIn(serverClientId: _googleWebClientId);
-      final googleUser = await googleSignIn.signIn();
-      final googleAuth = await googleUser!.authentication;
+  Future<void> signInWithEmail(String email, String password) async {
+    await _supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+  }
+
+  @override
+  Future<void> signUpWithEmail(String email, String password) async {
+    await _supabase.auth.signUp(
+      email: email,
+      password: password,
+      emailRedirectTo: 'io.supabase.tabl://login-callback/',
+    );
+  }
+
+  @override
+  Future<void> signInWithOAuth(OAuthProvider provider) async {
+    if (provider == OAuthProvider.google) {
+      // Use native Google Sign-In
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // The user canceled the sign-in
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
-      if (idToken == null) throw 'Google Sign-In failed: No idToken.';
-      return await _supabaseClient.auth.signInWithIdToken(
+
+      if (accessToken == null) {
+        throw 'No Access Token found.';
+      }
+      if (idToken == null) {
+        throw 'No ID Token found.';
+      }
+
+      await _supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
       );
-    } catch (e) {
-      throw Exception('An unexpected error occurred: $e');
-    }
-  }
-
-  @override
-  Future<AuthResponse> signUp({required String email, required String password}) async {
-    // ... (rest of the method is unchanged)
-    try {
-      if (_appRedirectUri == null) throw 'APP_REDIRECT_URI is not set.';
-      return await _supabaseClient.auth.signUp(
-        email: email,
-        password: password,
-        emailRedirectTo: _appRedirectUri,
-      );
-    } catch (e) {
-      throw Exception('An unexpected error occurred: $e');
-    }
-  }
-
-  @override
-  Future<AuthResponse> signInWithEmail({required String email, required String password}) async {
-    try {
-      return await _supabaseClient.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-    } on AuthException catch (e) {
-      throw Exception('Failed to sign in: ${e.message}');
-    } catch (e) {
-      throw Exception('An unexpected error occurred: $e');
+    } else {
+      // Use Supabase's default OAuth flow for other providers
+      await _supabase.auth.signInWithOAuth(provider);
     }
   }
 
   @override
   Future<void> signOut() async {
-    // ... (rest of the method is unchanged)
-    try {
-      final googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut();
-      await _supabaseClient.auth.signOut();
-    } catch (e) {
-      throw Exception('An unexpected error occurred: $e');
-    }
+    await _googleSignIn.signOut();
+    await _supabase.auth.signOut();
   }
+
+  @override
+  Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+
+  @override
+  User? get currentUser => _supabase.auth.currentUser;
 }

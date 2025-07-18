@@ -1,87 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tabl/shared/widgets/auth_button.dart';
+import 'package:tabl/shared/widgets/auth_form.dart';
 import 'package:tabl/shared/widgets/glass_app_bar.dart';
-import '../../../../shared/widgets/custom_form_field.dart';
-import '../bloc/auth_bloc.dart';
-import '../bloc/events/auth_event.dart';
-import '../bloc/states/auth_state.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      appBar: const GlassAppBar(title: 'Log In'),
+      appBar: const GlassAppBar(
+        title: 'Login',
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF075E54), Color(0xFF128C7E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [Color(0xFF2C5364), Color(0xFF203A43), Color(0xFF0F2027)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 80), // Space for AppBar
-                    CustomFormField(
-                      controller: _emailController,
-                      labelText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomFormField(
-                      controller: _passwordController,
-                      labelText: 'Password',
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 24),
-                    AuthButton(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(
-                              AuthLoginRequested(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim(),
-                              ),
-                            );
-                      },
-                      isLoading: state.isLoading,
-                      child: const Text('Log In'),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () { /* TODO: Implement Forgot Password */ },
-                        child: const Text('Forgot Password?', style: TextStyle(color: Colors.white70)),
-                      ),
-                    ),
-                  ],
-                );
-              },
+        child: const SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
+            child: Center(
+              child: SingleChildScrollView(
+                child: AuthForm(formType: AuthFormType.login),
+              ),
             ),
           ),
         ),

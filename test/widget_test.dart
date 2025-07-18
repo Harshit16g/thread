@@ -1,30 +1,52 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tabl/main.dart';
+import 'package:tabl/shared/widgets/auth_button.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+
+import 'fake_video_player_platform.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  // The main test suite
+  group('Widget Tests', () {
+    setUpAll(() async {
+      // Ensure that the test environment is initialized
+      TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      // Mock the video player platform
+      VideoPlayerPlatform.instance = FakeVideoPlayerPlatform();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      // Load environment variables for the test environment
+      await dotenv.load(fileName: ".env");
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      // Set up a mock for shared_preferences before initializing Supabase
+      SharedPreferences.setMockInitialValues({});
+
+      // Initialize Supabase for testing
+      await Supabase.initialize(
+        url: dotenv.env['SUPABASE_URL']!,
+        anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+      );
+    });
+
+    testWidgets('AuthScreen displays correctly', (WidgetTester tester) async {
+      // Initialize Google Sign-In for the test
+      final googleSignIn = GoogleSignIn(
+        serverClientId: dotenv.env['GOOGLE_SERVER_CLIENT_ID']!,
+      );
+
+      // Build our app and trigger a frame.
+      await tester.pumpWidget(MyApp(googleSignIn: googleSignIn));
+
+      // The app starts at AuthGate, which should show the AuthScreen.
+      // Let's verify that the main auth buttons are present.
+      expect(find.byType(AuthButton), findsNWidgets(3));
+      expect(find.text('Continue with Social Account'), findsOneWidget);
+      expect(find.text('Signup'), findsOneWidget);
+      expect(find.text('Login'), findsOneWidget);
+    });
   });
 }

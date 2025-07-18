@@ -1,24 +1,44 @@
-import 'package:flutter/material.dart';
+import 'package:equatable/equatable.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-@immutable
-abstract class AuthEvent {}
-
-enum AuthSignInType { google, email }
-
-class AuthSignInEvent extends AuthEvent {
-  final AuthSignInType type;
-  AuthSignInEvent(this.type);
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+  
+  @override
+  List<Object?> get props => [];
 }
 
-class AuthSignUpRequested extends AuthEvent {
+class CheckAuthStatus extends AuthEvent {}
+
+class SupabaseOAuthSignInRequested extends AuthEvent {
+  final OAuthProvider provider;
+  
+  const SupabaseOAuthSignInRequested(this.provider);
+  
+  @override
+  List<Object?> get props => [provider];
+}
+
+class EmailSignUpRequested extends AuthEvent {
   final String email;
   final String password;
-  AuthSignUpRequested({required this.email, required this.password});
+  
+  const EmailSignUpRequested(this.email, this.password);
+  
+  @override
+  List<Object?> get props => [email, password];
 }
 
-// Event for logging in with email and password
-class AuthLoginRequested extends AuthEvent {
+class EmailLoginRequested extends AuthEvent {
   final String email;
   final String password;
-  AuthLoginRequested({required this.email, required this.password});
+  
+  const EmailLoginRequested(this.email, this.password);
+  
+  @override
+  List<Object?> get props => [email, password];
 }
+
+class SignOutRequested extends AuthEvent {}
+
+class AuthLoadingDismissed extends AuthEvent {}

@@ -1,28 +1,71 @@
-import 'package:flutter/material.dart';
-import '../events/auth_event.dart'; // Import events to get AuthSignInType
+import 'package:equatable/equatable.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
-@immutable
-class AuthState {
+enum AuthMethod { email, oauth }
+
+abstract class AuthState extends Equatable {
   final bool isLoading;
-  final String? errorMessage;
-  // Add this field to track which sign-in process is active
-  final AuthSignInType? signInType;
+  final AuthMethod? authMethod;
 
-  const AuthState({
-    this.isLoading = false,
-    this.errorMessage,
-    this.signInType,
-  });
+  const AuthState({this.isLoading = false, this.authMethod});
 
-  AuthState copyWith({
-    bool? isLoading,
-    String? errorMessage,
-    AuthSignInType? signInType,
-  }) {
-    return AuthState(
-      isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage ?? this.errorMessage,
-      signInType: signInType ?? this.signInType,
-    );
+  AuthState copyWith({bool? isLoading, AuthMethod? authMethod});
+
+  @override
+  List<Object?> get props => [isLoading, authMethod];
+}
+
+class AuthInitial extends AuthState {
+  const AuthInitial() : super();
+
+  @override
+  AuthState copyWith({bool? isLoading, AuthMethod? authMethod}) {
+    return const AuthInitial();
+  }
+}
+
+class AuthLoading extends AuthState {
+  const AuthLoading({super.authMethod}) : super(isLoading: true);
+
+  @override
+  AuthState copyWith({bool? isLoading, AuthMethod? authMethod}) {
+    return AuthLoading(authMethod: authMethod ?? this.authMethod);
+  }
+}
+
+class AuthAuthenticated extends AuthState {
+  final sb.User user;
+
+  const AuthAuthenticated(this.user) : super();
+
+  @override
+  List<Object?> get props => [user, ...super.props];
+
+  @override
+  AuthState copyWith({bool? isLoading, AuthMethod? authMethod}) {
+    return AuthAuthenticated(user);
+  }
+}
+
+class AuthUnauthenticated extends AuthState {
+  const AuthUnauthenticated() : super();
+
+  @override
+  AuthState copyWith({bool? isLoading, AuthMethod? authMethod}) {
+    return const AuthUnauthenticated();
+  }
+}
+
+class AuthError extends AuthState {
+  final String message;
+
+  const AuthError(this.message) : super();
+
+  @override
+  List<Object?> get props => [message, ...super.props];
+
+  @override
+  AuthState copyWith({bool? isLoading, AuthMethod? authMethod}) {
+    return AuthError(message);
   }
 }

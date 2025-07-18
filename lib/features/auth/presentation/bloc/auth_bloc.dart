@@ -1,59 +1,88 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import '../../domain/repositories/auth_repository.dart';
-import 'events/auth_event.dart';
-import 'states/auth_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
+import 'package:tabl/features/auth/domain/repositories/auth_repository.dart';
+import 'package:tabl/features/auth/presentation/bloc/events/auth_event.dart';
+import 'package:tabl/features/auth/presentation/bloc/states/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  StreamSubscription<sb.AuthState>? _authStateSubscription;
 
-  AuthBloc(this._authRepository) : super(const AuthState()) {
-    on<AuthSignInEvent>(_onSignIn);
-    on<AuthSignUpRequested>(_onSignUpRequested);
-    on<AuthLoginRequested>(_onLoginRequested);
-  }
+  AuthBloc(this._authRepository) : super(const AuthInitial()) {
+    on<CheckAuthStatus>(_onCheckAuthStatus);
+    on<SupabaseOAuthSignInRequested>(_onSupabaseOAuthSignIn);
+    on<EmailSignUpRequested>(_onEmailSignUp);
+    on<EmailLoginRequested>(_onEmailLogin);
+    on<SignOutRequested>(_onSignOut);
+    on<AuthLoadingDismissed>(_onAuthLoadingDismissed);
 
-  FutureOr<void> _onSignIn(AuthSignInEvent event, Emitter<AuthState> emit) async {
-    // Set the signInType when loading starts
-    emit(state.copyWith(isLoading: true, errorMessage: null, signInType: event.type));
-    try {
-      if (event.type == AuthSignInType.google) {
-        final response = await _authRepository.signInWithGoogle();
-        if (response.user == null) {
-          emit(state.copyWith(isLoading: false, errorMessage: 'Sign in failed.', signInType: null));
-        } else {
-          emit(state.copyWith(isLoading: false, signInType: null));
-        }
+    _authStateSubscription =
+        _authRepository.authStateChanges.listen((authState) {
+      if (authState.session != null) {
+        add(CheckAuthStatus());
       }
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), signInType: null));
+    });
+  }
+
+  FutureOr<void> _onCheckAuthStatus(
+      CheckAuthStatus event, Emitter<AuthState> emit) async {
+    final user = _authRepository.currentUser;
+    if (user != null) {
+      emit(AuthAuthenticated(user));
+    } else {
+      emit(const AuthUnauthenticated());
     }
   }
 
-  FutureOr<void> _onSignUpRequested(AuthSignUpRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null, signInType: AuthSignInType.email));
+  FutureOr<void> _onSupabaseOAuthSignIn(
+      SupabaseOAuthSignInRequested event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading(authMethod: AuthMethod.oauth));
     try {
-      await _authRepository.signUp(email: event.email, password: event.password);
-      emit(state.copyWith(isLoading: false, signInType: null));
+      await _authRepository.signInWithOAuth(event.provider);
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), signInType: null));
+      emit(AuthError(e.toString()));
     }
   }
 
-  FutureOr<void> _onLoginRequested(AuthLoginRequested event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null, signInType: AuthSignInType.email));
+  FutureOr<void> _onEmailSignUp(
+      EmailSignUpRequested event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading(authMethod: AuthMethod.email));
     try {
-      final response = await _authRepository.signInWithEmail(
-        email: event.email,
-        password: event.password,
-      );
-      if (response.user == null) {
-        emit(state.copyWith(isLoading: false, errorMessage: 'Login failed. Please check your credentials.', signInType: null));
-      } else {
-        emit(state.copyWith(isLoading: false, signInType: null));
-      }
+      await _authRepository.signUpWithEmail(event.email, event.password);
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString(), signInType: null));
+      emit(AuthError(e.toString()));
     }
+  }
+
+  FutureOr<void> _onEmailLogin(
+      EmailLoginRequested event, Emitter<AuthState> emit) async {
+    emit(const AuthLoading(authMethod: AuthMethod.email));
+    try {
+      await _authRepository.signInWithEmail(event.email, event.password);
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  FutureOr<void> _onSignOut(
+      SignOutRequested event, Emitter<AuthState> emit) async {
+    try {
+      await _authRepository.signOut();
+      emit(const AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  FutureOr<void> _onAuthLoadingDismissed(
+      AuthLoadingDismissed event, Emitter<AuthState> emit) {
+    emit(state.copyWith(isLoading: false));
+  }
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
   }
 }
