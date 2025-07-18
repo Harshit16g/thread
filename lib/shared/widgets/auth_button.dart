@@ -23,22 +23,12 @@ class AuthButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (style == AuthButtonStyle.solid) {
-      return PrimaryButton(
-        onPressed: onPressed,
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(solidColor),
-          foregroundColor: MaterialStateProperty.all(solidTextColor),
-          shape: MaterialStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          padding: MaterialStateProperty.all(
-            const EdgeInsets.symmetric(vertical: 16),
-          ),
-        ),
-        child: child,
-      );
+      if (child is Text) {
+        return PrimaryButton(
+          onPressed: onPressed,
+          text: (child as Text).data!,
+        );
+      }
     }
 
     return GlassButton(

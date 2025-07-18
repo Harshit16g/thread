@@ -30,6 +30,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.0
   mockito: ^5.4.4
   build_runner: ^2.4.8
+  video_player_platform_interface: ^6.2.2
 
 flutter_launcher_icons:
   android: "launcher_icon"
