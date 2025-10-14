@@ -6,6 +6,9 @@ import 'auth_gate.dart'; // Import AuthGate
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,12 +27,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<AuthRepository>(
-      create: (context) => AuthRepositoryImpl(supabase),
-      child: BlocProvider<AuthBloc>(
-        create: (context) => AuthBloc(
-          RepositoryProvider.of<AuthRepository>(context),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<AuthRepository>(
+          create: (context) => AuthRepositoryImpl(supabase),
         ),
+        RepositoryProvider<ProfileRepository>(
+          create: (context) => ProfileRepositoryImpl(supabase),
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (context) => AuthBloc(
+              RepositoryProvider.of<AuthRepository>(context),
+            ),
+          ),
+          BlocProvider<ProfileBloc>(
+            create: (context) => ProfileBloc(
+              RepositoryProvider.of<ProfileRepository>(context),
+              supabase,
+            ),
+          ),
+        ],
         child: MaterialApp(
           title: 'TabL',
           debugShowCheckedModeBanner: false,
