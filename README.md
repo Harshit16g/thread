@@ -33,39 +33,64 @@ TabL is designed to:
 
 ## 🧩 Key Features
 
-- ✅ Multi-service marketplace (rides, rentals, food, delivery, etc.)
-- ✅ Users can act as providers & consumers
-- ✅ Decentralized user verification & referral system
-- ✅ Native token for payments, rewards, and governance
-- ✅ Voting & proposal system
-- ✅ Real-time community news
-- ✅ Hardware/IP tagging & immutable transaction logs for fraud prevention
+### Implemented ✅
+- **Authentication System**: Google OAuth and email/password auth with Supabase
+- **User Profile Management**: Complete CRUD operations for user profiles
+  - View profile with avatar, bio, and contact info
+  - Edit profile with form validation
+  - Secure logout functionality
+  - Automatic profile creation on signup
+- **Clean Architecture**: Feature-first structure with separation of concerns
+- **State Management**: BLoC pattern for predictable state updates
+- **Security**: Row Level Security (RLS) and secure data access
+- **Modern UI**: Glass morphism design with dark theme
+
+### Planned 🚧
+- Multi-service marketplace (rides, rentals, food, delivery, etc.)
+- Users can act as providers & consumers
+- Decentralized user verification & referral system
+- Native token for payments, rewards, and governance
+- Voting & proposal system
+- Real-time community news
+- Hardware/IP tagging & immutable transaction logs for fraud prevention
 
 ---
 
-## 📦 Project Structure (proposed)
+## 📦 Current Project Structure
 
 ```plaintext
 lib/
-├── main.dart
-├── core/                  # Shared services, constants, utils, theming
-├── features/              # Modular, feature-first design
-│   ├── auth/              # Sign up, login, decentralized verification
-│   ├── marketplace/       # Service listing & booking flows
-│   ├── ridesharing/       # Ride-sharing module
-│   ├── rentals/           # Home rentals listing
-│   ├── food/              # Tiffin & restaurant services
-│   ├── wallet/            # Native token management
-│   ├── voting/            # Community proposals & governance
-│   ├── news/              # News & announcements
-│   └── transactions/      # Immutable transaction chain & logs
-├── models/                # Data models
-├── blocs/ or cubits/      # State management
-├── ui/                    # Common screens, widgets, components
-└── services/              # External integrations (maps, storage, API)
+├── main.dart                  # App entry point with DI setup
+├── auth_gate.dart             # Auth state controller
+├── core/                      # Shared services, constants, theming
+│   ├── services/              # Singleton services (auth, storage)
+│   └── theme/                 # App-wide theming
+├── features/                  # Feature-first modular design
+│   ├── auth/                  # ✅ Authentication (complete)
+│   │   ├── data/              # Repository implementation
+│   │   ├── domain/            # Business logic & interfaces
+│   │   └── presentation/      # UI & BLoC
+│   ├── profile/               # ✅ Profile management (complete)
+│   │   ├── data/              # Repository implementation
+│   │   ├── domain/            # Business logic & interfaces
+│   │   └── presentation/      # UI & BLoC
+│   ├── home/                  # 🚧 Home screen (placeholder)
+│   ├── search/                # 🚧 Search feature (placeholder)
+│   ├── connect/               # 🚧 Connect feature (placeholder)
+│   └── shell/                 # Main navigation shell
+└── shared/                    # Reusable UI components
+    └── widgets/               # Glass containers, buttons, forms
 
-> 🧪 Follows a feature-first structure for scalability & modularity.
+docs/
+├── dev/                       # Developer documentation
+│   ├── architecture.md        # Architecture guide
+│   ├── auth/                  # Auth feature docs
+│   ├── profile/               # Profile feature docs
+│   └── theming.md             # UI theming guide
+├── DATABASE_SETUP.md          # Database migration guide
+└── ISSUES_AND_IMPROVEMENTS.md # Issues fixed & improvements
 
+> 🏗️ Clean architecture with feature-first structure for scalability & modularity.
 ```
 ---
 
@@ -114,32 +139,51 @@ flowchart TD
 
 ## 🤝 Contributing
 
-1. Clone the repository:
+### Setup Instructions
 
-git clone https://github.com/your-org/tabl.git
+1. **Clone the repository**:
+```bash
+git clone https://github.com/Harshit16g/thread.git
+cd thread
+```
 
-
-2. Install dependencies:
-
+2. **Install dependencies**:
+```bash
 flutter pub get
+```
 
+3. **Set up environment variables**:
+Create a `.env` file in the root directory:
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+GOOGLE_WEB_CLIENT_ID=your_google_web_client_id
+APP_REDIRECT_URI=your_app_redirect_uri
+```
 
-3. Run the app:
+4. **Set up the database**:
+Follow the instructions in [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md) to create the database schema.
 
+5. **Run the app**:
+```bash
 flutter run
+```
 
-
-4. Create a feature branch:
-
+6. **Create a feature branch**:
+```bash
 git checkout -b feat/my-feature
+```
 
+7. **Commit, push, and open a pull request**.
 
-5. Commit, push, and open a pull request.
+### Documentation
+- [Architecture Guide](docs/dev/architecture.md)
+- [Auth Feature](docs/dev/auth/frontend.md)
+- [Profile Feature](docs/dev/profile/feature.md)
+- [Database Setup](docs/DATABASE_SETUP.md)
+- [Issues & Improvements](docs/ISSUES_AND_IMPROVEMENTS.md)
 
-
-
-> Please follow the guidelines in CONTRIBUTING.md.
-![contribution.md](docs/contribution.md)
+> Please follow the guidelines in [CONTRIBUTING.md](docs/Contribution.md)
 
 
 
