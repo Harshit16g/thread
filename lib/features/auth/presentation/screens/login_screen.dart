@@ -27,65 +27,96 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: const GlassAppBar(title: 'Log In'),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF075E54), Color(0xFF128C7E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 80), // Space for AppBar
-                    CustomFormField(
-                      controller: _emailController,
-                      labelText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomFormField(
-                      controller: _passwordController,
-                      labelText: 'Password',
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 24),
-                    AuthButton(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(
-                              AuthLoginRequested(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim(),
-                              ),
-                            );
-                      },
-                      isLoading: state.isLoading,
-                      child: const Text('Log In'),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () { /* TODO: Implement Forgot Password */ },
-                        child: const Text('Forgot Password?', style: TextStyle(color: Colors.white70)),
-                      ),
-                    ),
-                  ],
-                );
-              },
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                ],
+              ),
             ),
           ),
         ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          extendBodyBehindAppBar: true,
+          appBar: const GlassAppBar(title: 'Log In'),
+          body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (!state.isLoading) {
+                        if (state.errorMessage != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.errorMessage!),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        } else {
+                          // Success - pop the screen to reveal AuthGate/MainScreen
+                          Navigator.of(context).pop();
+                        }
+                      }
+                    },
+                    builder: (context, state) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CustomFormField(
+                            controller: _emailController,
+                            labelText: 'Email',
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomFormField(
+                            controller: _passwordController,
+                            labelText: 'Password',
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 24),
+                          AuthButton(
+                            onPressed: () {
+                              context.read<AuthBloc>().add(
+                                    AuthLoginRequested(
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text.trim(),
+                                    ),
+                                  );
+                            },
+                            isLoading: state.isLoading,
+                            child: const Text('Log In'),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () { /* TODO: Implement Forgot Password */ },
+                              child: Text('Forgot Password?', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7))),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
+      ],
     );
   }
 }

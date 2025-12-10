@@ -56,16 +56,18 @@ class _MainScreenState extends State<MainScreen> {
               ),
               TextButton(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
                   final didAuthenticate = await _localAuthService.authenticate('Please authenticate to enable biometrics');
                   
                   if (!mounted) return;
                   
                   if (didAuthenticate) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('Biometrics enabled!')),
                     );
                   }
-                  Navigator.of(context).pop();
+                  navigator.pop();
                 },
                 child: const Text('Enable'),
               ),

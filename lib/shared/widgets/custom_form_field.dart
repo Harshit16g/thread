@@ -28,26 +28,33 @@ class CustomFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return TextFormField(
       controller: controller,
       initialValue: initialValue,
       decoration: InputDecoration(
         labelText: labelText ?? hintText,
         hintText: hintText,
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: colorScheme.onSurfaceVariant) : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[700]!),
+          borderSide: BorderSide(color: colorScheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.amber[800]!),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         filled: true,
-        fillColor: enabled ? Colors.grey[900]?.withOpacity(0.3) : Colors.grey[900]?.withOpacity(0.1),
+        fillColor: enabled 
+            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) 
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
+        labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
       ),
       obscureText: obscureText,
       keyboardType: keyboardType,
@@ -55,7 +62,7 @@ class CustomFormField extends StatelessWidget {
       enabled: enabled,
       validator: validator,
       style: TextStyle(
-        color: enabled ? Colors.white : Colors.grey[500],
+        color: enabled ? colorScheme.onSurface : colorScheme.onSurface.withValues(alpha: 0.5),
       ),
     );
   }

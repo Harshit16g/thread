@@ -5,6 +5,7 @@ class UserProfile {
   final String? avatarUrl;
   final String? bio;
   final String? phoneNumber;
+  final String? themePreference;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -15,6 +16,7 @@ class UserProfile {
     this.avatarUrl,
     this.bio,
     this.phoneNumber,
+    this.themePreference,
     required this.createdAt,
     this.updatedAt,
   });
@@ -26,6 +28,7 @@ class UserProfile {
     String? avatarUrl,
     String? bio,
     String? phoneNumber,
+    String? themePreference,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -36,6 +39,7 @@ class UserProfile {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       bio: bio ?? this.bio,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      themePreference: themePreference ?? this.themePreference,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

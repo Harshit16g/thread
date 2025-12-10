@@ -48,25 +48,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
-  @override
-  Future<void> createProfile({
-    required String userId,
-    required String email,
-    String? fullName,
-  }) async {
-    try {
-      final profile = UserProfileModel(
-        id: userId,
-        email: email,
-        fullName: fullName,
-        createdAt: DateTime.now(),
-      );
 
-      await _supabaseClient.from('profiles').insert(profile.toJson());
-    } catch (e) {
-      throw Exception('Failed to create profile: $e');
-    }
-  }
 
   @override
   Future<String?> uploadAvatar(String userId, String filePath) async {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/sync/sync_service.dart';
 import '../../domain/repositories/profile_repository.dart';
 import 'events/profile_event.dart';
 import 'states/profile_state.dart';
@@ -8,8 +9,9 @@ import 'states/profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ProfileRepository _profileRepository;
   final SupabaseClient _supabaseClient;
+  final SyncService _syncService;
 
-  ProfileBloc(this._profileRepository, this._supabaseClient)
+  ProfileBloc(this._profileRepository, this._supabaseClient, this._syncService)
       : super(const ProfileState()) {
     on<ProfileLoadRequested>(_onLoadRequested);
     on<ProfileUpdateRequested>(_onUpdateRequested);
@@ -76,7 +78,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   FutureOr<void> _onLogoutRequested(
       ProfileLogoutRequested event, Emitter<ProfileState> emit) async {
     try {
+      await _syncService.forceSync();
       await _supabaseClient.auth.signOut();
+      await _syncService.clearLocal();
       emit(const ProfileState());
     } catch (e) {
       emit(state.copyWith(

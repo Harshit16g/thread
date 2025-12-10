@@ -27,58 +27,89 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: const GlassAppBar(title: 'Create Account'),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF075E54), Color(0xFF128C7E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 80), // Space for AppBar
-                    CustomFormField(
-                      controller: _emailController,
-                      labelText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomFormField(
-                      controller: _passwordController,
-                      labelText: 'Password',
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 24),
-                    AuthButton(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(
-                              AuthSignUpRequested(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim(),
-                              ),
-                            );
-                      },
-                      isLoading: state.isLoading,
-                      child: const Text('Sign Up'),
-                    ),
-                  ],
-                );
-              },
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                ],
+              ),
             ),
           ),
         ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          extendBodyBehindAppBar: true,
+          appBar: const GlassAppBar(title: 'Create Account'),
+          body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: BlocConsumer<AuthBloc, AuthState>(
+                    listener: (context, state) {
+                      if (!state.isLoading) {
+                        if (state.errorMessage != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.errorMessage!),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        } else {
+                          // Success - pop the screen to reveal AuthGate/MainScreen
+                          Navigator.of(context).pop();
+                        }
+                      }
+                    },
+                    builder: (context, state) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CustomFormField(
+                            controller: _emailController,
+                            labelText: 'Email',
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomFormField(
+                            controller: _passwordController,
+                            labelText: 'Password',
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 24),
+                          AuthButton(
+                            onPressed: () {
+                              context.read<AuthBloc>().add(
+                                    AuthSignUpRequested(
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text.trim(),
+                                    ),
+                                  );
+                            },
+                            isLoading: state.isLoading,
+                            child: const Text('Sign Up'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
+      ],
     );
   }
 }

@@ -18,7 +18,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: GlassContainer(
           borderRadius: 16,
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           child: AppBar(
             title: Text(title),
             backgroundColor: Colors.transparent,

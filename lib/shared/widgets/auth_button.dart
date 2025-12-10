@@ -1,4 +1,4 @@
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 enum AuthButtonStyle {
@@ -11,8 +11,8 @@ class AuthButton extends StatefulWidget {
   final Widget child;
   final bool isLoading;
   final AuthButtonStyle style;
-  final Color solidColor;
-  final Color solidTextColor;
+  final Color? solidColor;
+  final Color? solidTextColor;
 
   const AuthButton({
     super.key,
@@ -20,8 +20,8 @@ class AuthButton extends StatefulWidget {
     required this.child,
     this.isLoading = false,
     this.style = AuthButtonStyle.glass,
-    this.solidColor = Colors.black,
-    this.solidTextColor = Colors.white,
+    this.solidColor,
+    this.solidTextColor,
   });
 
   @override
@@ -47,12 +47,19 @@ class _AuthButtonState extends State<AuthButton> {
   Widget build(BuildContext context) {
     final bool isSolid = widget.style == AuthButtonStyle.solid;
     
-    // Invert colors for solid style when pressed
-    final Color effectiveColor = isSolid && _isPressed ? widget.solidTextColor : widget.solidColor;
-    final Color effectiveTextColor = isSolid && _isPressed ? widget.solidColor : widget.solidTextColor;
+    final colorScheme = Theme.of(context).colorScheme;
     
     // For glass style, reduce opacity when pressed
     final double glassOpacity = _isPressed ? 0.35 : 0.2;
+
+    // Invert colors for solid style when pressed
+    final Color effectiveColor = isSolid 
+        ? (widget.solidColor ?? colorScheme.primary)
+        : colorScheme.surface.withValues(alpha: glassOpacity);
+        
+    final Color effectiveTextColor = isSolid 
+        ? (widget.solidTextColor ?? colorScheme.onPrimary)
+        : colorScheme.onSurface;
 
     return GestureDetector(
       onTapDown: _onTapDown,
@@ -62,12 +69,12 @@ class _AuthButtonState extends State<AuthButton> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isSolid ? effectiveColor : Colors.blueGrey.withOpacity(glassOpacity),
+          color: effectiveColor,
           borderRadius: BorderRadius.circular(12),
-          border: isSolid ? null : Border.all(color: Colors.white.withOpacity(0.3)),
+          border: isSolid ? null : Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),

@@ -8,6 +8,7 @@ class UserProfileModel extends UserProfile {
     super.avatarUrl,
     super.bio,
     super.phoneNumber,
+    super.themePreference,
     required super.createdAt,
     super.updatedAt,
   });
@@ -20,6 +21,7 @@ class UserProfileModel extends UserProfile {
       avatarUrl: json['avatar_url'] as String?,
       bio: json['bio'] as String?,
       phoneNumber: json['phone_number'] as String?,
+      themePreference: json['theme_preference'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
@@ -35,11 +37,13 @@ class UserProfileModel extends UserProfile {
       'avatar_url': avatarUrl,
       'bio': bio,
       'phone_number': phoneNumber,
+      'theme_preference': themePreference,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
+  @override
   UserProfileModel copyWith({
     String? id,
     String? email,
@@ -47,6 +51,7 @@ class UserProfileModel extends UserProfile {
     String? avatarUrl,
     String? bio,
     String? phoneNumber,
+    String? themePreference,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -57,6 +62,7 @@ class UserProfileModel extends UserProfile {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       bio: bio ?? this.bio,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      themePreference: themePreference ?? this.themePreference,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

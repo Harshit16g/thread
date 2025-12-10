@@ -9,6 +9,10 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/profile/data/repositories/profile_repository_impl.dart';
 import 'features/profile/domain/repositories/profile_repository.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'core/theme/data/theme_repository.dart';
+import 'core/theme/bloc/theme_bloc.dart';
+import 'core/theme/bloc/theme_state.dart';
+import 'core/sync/sync_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,11 +33,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<SyncService>(
+          create: (context) => SyncService(supabase)..checkAndSync(),
+        ),
         RepositoryProvider<AuthRepository>(
           create: (context) => AuthRepositoryImpl(supabase),
         ),
         RepositoryProvider<ProfileRepository>(
           create: (context) => ProfileRepositoryImpl(supabase),
+        ),
+        RepositoryProvider<ThemeRepository>(
+          create: (context) => ThemeRepository(
+            syncService: RepositoryProvider.of<SyncService>(context),
+          ),
         ),
       ],
       child: MultiBlocProvider(
@@ -47,18 +59,32 @@ class MyApp extends StatelessWidget {
             create: (context) => ProfileBloc(
               RepositoryProvider.of<ProfileRepository>(context),
               supabase,
+              RepositoryProvider.of<SyncService>(context),
+            ),
+          ),
+          BlocProvider<ThemeBloc>(
+            create: (context) => ThemeBloc(
+              themeRepository: RepositoryProvider.of<ThemeRepository>(context),
+              profileBloc: BlocProvider.of<ProfileBloc>(context),
             ),
           ),
         ],
-        child: MaterialApp(
-          title: 'TabL',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: const Color(0xFF1C1C1E),
-          ),
-          // Set AuthGate as the home. It will correctly show the AuthScreen
-          // with its video background.
-          home: const AuthGate(),
+        child: BlocBuilder<ThemeBloc, ThemeState>(
+          builder: (context, state) {
+            ThemeData theme = ThemeData.dark(); // Default fallback
+            if (state is ThemeLoaded) {
+              theme = state.themeData;
+            }
+            
+            return MaterialApp(
+              title: 'TabL',
+              debugShowCheckedModeBanner: false,
+              theme: theme,
+              // Set AuthGate as the home. It will correctly show the AuthScreen
+              // with its video background.
+              home: const AuthGate(),
+            );
+          },
         ),
       ),
     );

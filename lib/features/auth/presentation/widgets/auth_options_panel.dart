@@ -36,8 +36,6 @@ class AuthOptionsPanel extends StatelessWidget {
                     onPressed: () => context.read<AuthBloc>().add(AuthSignInEvent(AuthSignInType.google)),
                     isLoading: state.isLoading && state.signInType == AuthSignInType.google,
                     style: AuthButtonStyle.solid,
-                    solidColor: Colors.black,
-                    solidTextColor: Colors.white,
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

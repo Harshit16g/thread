@@ -23,8 +23,8 @@ class GlassButton extends StatelessWidget {
       child: GlassContainer(
         borderRadius: 12,
         // Use the provided color, or default to a neutral glass
-        color: color ?? Colors.white.withOpacity(0.15),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        color: color ?? Colors.white.withValues(alpha: 0.15),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14.0),
           child: Center(
