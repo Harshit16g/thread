@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/user_profile.dart';
+import '../../../domain/entities/user_profile.dart';
 
 @immutable
 abstract class ProfileEvent {}
