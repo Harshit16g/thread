@@ -79,34 +79,39 @@ class RoomsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: _getRoomColor(room.type),
-          child: Icon(_getRoomIcon(room.type), color: Colors.white, size: 20),
-        ),
-        title: Text(
-          room.name ?? 'Untitled Room',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          room.type.name.toUpperCase(),
-          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
-        ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.white24),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (routeContext) => BlocProvider(
-                create: (blocContext) => RoomChatBloc(
-                  RepositoryProvider.of<RoomRepository>(context),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: CircleAvatar(
+            backgroundColor: _getRoomColor(room.type),
+            child: Icon(_getRoomIcon(room.type), color: Colors.white, size: 20),
+          ),
+          title: Text(
+            room.name ?? 'Untitled Room',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            room.type.name.toUpperCase(),
+            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (routeContext) => BlocProvider(
+                  create: (blocContext) => RoomChatBloc(
+                    RepositoryProvider.of<RoomRepository>(context),
+                  ),
+                  child: RoomChatScreen(room: room),
                 ),
-                child: RoomChatScreen(room: room),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
