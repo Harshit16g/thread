@@ -19,6 +19,8 @@ dependencies:
   video_player: ^2.8.2
   flutter_secure_storage: ^9.0.0
   equatable: ^2.0.7
+  http: ^1.2.0
+  flutter_markdown: ^0.7.1
 
 dev_dependencies:
   flutter_test:

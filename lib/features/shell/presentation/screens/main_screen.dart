@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../connect/presentation/screens/connect_screen.dart';
+import '../../../ai/presentation/screens/ai_chat_screen.dart';
 import '../../../../core/services/local_auth_service.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
+import '../../../rooms/presentation/screens/rooms_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,8 +20,8 @@ class _MainScreenState extends State<MainScreen> {
 
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
+    RoomsScreen(),
     SearchScreen(),
-    ConnectScreen(),
     ProfileScreen(),
   ];
 
@@ -93,8 +94,8 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Discussions'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Connect'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,

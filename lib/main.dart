@@ -9,6 +9,17 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/profile/data/repositories/profile_repository_impl.dart';
 import 'features/profile/domain/repositories/profile_repository.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/ai/domain/repositories/ai_repository.dart';
+import 'features/ai/data/repositories/ai_repository_impl.dart';
+import 'features/ai/presentation/bloc/ai_chat_bloc.dart';
+import 'features/rooms/domain/repositories/room_repository.dart';
+import 'features/rooms/data/repositories/room_repository_impl.dart';
+import 'features/rooms/presentation/bloc/rooms_bloc.dart';
+import 'features/rooms/presentation/bloc/events/rooms_event.dart';
+import 'features/home/domain/repositories/post_repository.dart';
+import 'features/home/data/repositories/post_repository_impl.dart';
+import 'features/home/presentation/bloc/posts_bloc.dart';
+import 'features/home/presentation/bloc/events/posts_event.dart';
 import 'core/theme/data/theme_repository.dart';
 import 'core/theme/bloc/theme_bloc.dart';
 import 'core/theme/bloc/theme_state.dart';
@@ -42,6 +53,15 @@ class MyApp extends StatelessWidget {
         RepositoryProvider<ProfileRepository>(
           create: (context) => ProfileRepositoryImpl(supabase),
         ),
+        RepositoryProvider<AiRepository>(
+          create: (context) => AiRepositoryImpl(),
+        ),
+        RepositoryProvider<RoomRepository>(
+          create: (context) => RoomRepositoryImpl(supabase),
+        ),
+        RepositoryProvider<PostRepository>(
+          create: (context) => PostRepositoryImpl(supabase),
+        ),
         RepositoryProvider<ThemeRepository>(
           create: (context) => ThemeRepository(
             syncService: RepositoryProvider.of<SyncService>(context),
@@ -61,6 +81,21 @@ class MyApp extends StatelessWidget {
               supabase,
               RepositoryProvider.of<SyncService>(context),
             ),
+          ),
+          BlocProvider<AiChatBloc>(
+            create: (context) => AiChatBloc(
+              aiRepository: RepositoryProvider.of<AiRepository>(context),
+            ),
+          ),
+          BlocProvider<RoomsBloc>(
+            create: (context) => RoomsBloc(
+              RepositoryProvider.of<RoomRepository>(context),
+            )..add(LoadMyRooms()),
+          ),
+          BlocProvider<PostsBloc>(
+            create: (context) => PostsBloc(
+              RepositoryProvider.of<PostRepository>(context),
+            )..add(LoadFeed()),
           ),
           BlocProvider<ThemeBloc>(
             create: (context) => ThemeBloc(
