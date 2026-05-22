@@ -186,10 +186,7 @@ class RoomRepositoryImpl implements RoomRepository {
 
       String content = choices[0]['message']['content'] as String? ?? '';
 
-      // Strip <think>...</think> tags from the response
-      content = content.replaceAll(RegExp(r'<think>[\s\S]*?</think>'), '').trim();
-
-      if (content.isEmpty) {
+      if (content.trim().isEmpty) {
         content = 'I processed your request but had no additional output. Could you rephrase?';
       }
 

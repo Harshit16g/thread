@@ -400,6 +400,10 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   // ─── AI Bubble ─────────────────────────────────────────────────────────────
 
   Widget _buildAiBubble(RoomMessage message, bool showSender) {
+    final parsed = _parseThinkContent(message.content);
+    final String thinkingText = parsed['think']!;
+    final String contentText = parsed['content']!;
+
     return Padding(
       padding: EdgeInsets.only(bottom: showSender ? 14 : 6),
       child: Column(
@@ -448,8 +452,10 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (thinkingText.isNotEmpty)
+                  CollapsibleThinkingBlock(thinkingText: thinkingText),
                 MarkdownBody(
-                  data: message.content,
+                  data: contentText,
                   styleSheet: _aiMarkdownStyleSheet,
                 ),
                 const SizedBox(height: 6),
@@ -702,6 +708,104 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: const Text('Make Public', style: TextStyle(fontFamily: 'Inter')),
           ),
+        ],
+      ),
+    );
+  }
+
+  Map<String, String> _parseThinkContent(String content) {
+    final thinkRegex = RegExp(r'<think>([\s\S]*?)</think>');
+    final match = thinkRegex.firstMatch(content);
+    if (match != null) {
+      final thinkText = match.group(1)?.trim() ?? '';
+      final remainingContent = content.replaceFirst(thinkRegex, '').trim();
+      return {
+        'think': thinkText,
+        'content': remainingContent,
+      };
+    }
+    return {
+      'think': '',
+      'content': content,
+    };
+  }
+}
+
+class CollapsibleThinkingBlock extends StatefulWidget {
+  final String thinkingText;
+  const CollapsibleThinkingBlock({super.key, required this.thinkingText});
+
+  @override
+  State<CollapsibleThinkingBlock> createState() => _CollapsibleThinkingBlockState();
+}
+
+class _CollapsibleThinkingBlockState extends State<CollapsibleThinkingBlock> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.psychology_outlined, size: 16, color: Colors.amber[500]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Thinking Process',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    size: 16,
+                    color: Colors.white.withValues(alpha: 0.4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_isExpanded) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(left: 14, right: 14, bottom: 14, top: 4),
+              child: Text(
+                widget.thinkingText,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.white.withValues(alpha: 0.45),
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
