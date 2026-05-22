@@ -31,6 +31,14 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   AnimationController? _typingDotController;
   late final MarkdownStyleSheet _aiMarkdownStyleSheet;
 
+  // Cached heavy decorations for high frame-rate rendering
+  late final BoxDecoration _aiBubbleDecoration;
+  late final BoxDecoration _userBubbleDecorationMe;
+  late final BoxDecoration _userBubbleDecorationOther;
+  late final BoxDecoration _inputAreaDecoration;
+  late final BoxDecoration _textFieldWrapperDecoration;
+  late final BoxDecoration _typingIndicatorDecoration;
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +66,65 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
         color: Colors.amber[900]!.withValues(alpha: 0.06),
         border: Border(left: BorderSide(color: Colors.amber[800]!, width: 3)),
       ),
+    );
+
+    _aiBubbleDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.03),
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(4),
+        topRight: Radius.circular(18),
+        bottomLeft: Radius.circular(18),
+        bottomRight: Radius.circular(18),
+      ),
+      border: Border.all(color: Colors.amber[800]!.withValues(alpha: 0.08)),
+    );
+
+    _userBubbleDecorationMe = BoxDecoration(
+      color: Colors.amber[800]!.withValues(alpha: 0.15),
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(18),
+        topRight: Radius.circular(18),
+        bottomLeft: Radius.circular(18),
+        bottomRight: Radius.circular(4),
+      ),
+      border: Border.all(
+        color: Colors.amber[800]!.withValues(alpha: 0.2),
+      ),
+    );
+
+    _userBubbleDecorationOther = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.05),
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(18),
+        topRight: Radius.circular(18),
+        bottomLeft: Radius.circular(4),
+        bottomRight: Radius.circular(18),
+      ),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.06),
+      ),
+    );
+
+    _inputAreaDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.02),
+      border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.04))),
+    );
+
+    _textFieldWrapperDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.04),
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+    );
+
+    _typingIndicatorDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.03),
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(4),
+        topRight: Radius.circular(18),
+        bottomLeft: Radius.circular(18),
+        bottomRight: Radius.circular(18),
+      ),
+      border: Border.all(color: Colors.amber[800]!.withValues(alpha: 0.08)),
     );
   }
 
@@ -360,22 +427,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
             child: Container(
               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isMe
-                    ? Colors.amber[800]!.withOpacity(0.15)
-                    : Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isMe ? 18 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 18),
-                ),
-                border: Border.all(
-                  color: isMe
-                      ? Colors.amber[800]!.withOpacity(0.2)
-                      : Colors.white.withOpacity(0.06),
-                ),
-              ),
+              decoration: isMe ? _userBubbleDecorationMe : _userBubbleDecorationOther,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -439,16 +491,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
           Container(
             constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-              border: Border.all(color: Colors.amber[800]!.withOpacity(0.08)),
-            ),
+            decoration: _aiBubbleDecoration,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -501,16 +544,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-              border: Border.all(color: Colors.amber[800]!.withOpacity(0.08)),
-            ),
+            decoration: _typingIndicatorDecoration,
             child: AnimatedBuilder(
               animation: controller,
               builder: (context, child) {
@@ -568,10 +602,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
     final isAiRoom = widget.room.type == RoomType.ai;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.04))),
-      ),
+      decoration: _inputAreaDecoration,
       child: Row(
         children: [
           if (!isAiRoom)
@@ -583,11 +614,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
+              decoration: _textFieldWrapperDecoration,
               child: TextField(
                 controller: _messageController,
                 style: const TextStyle(fontFamily: 'Inter', color: Colors.white, fontSize: 14),
