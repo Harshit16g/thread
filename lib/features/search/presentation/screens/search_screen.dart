@@ -50,11 +50,11 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     try {
       final currentUserId = _client.auth.currentUser?.id;
       // Get some active users
-      var usersQuery = _client.from('profiles').select().limit(5);
+      var usersQuery = _client.from('profiles').select();
       if (currentUserId != null) {
         usersQuery = usersQuery.neq('id', currentUserId);
       }
-      final usersData = await usersQuery;
+      final usersData = await usersQuery.limit(5);
       
       // Get some public discussion rooms/posts
       final postsData = await _client
@@ -110,14 +110,13 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
         var userQuery = _client
             .from('profiles')
             .select()
-            .or('full_name.ilike.%$query%,email.ilike.%$query%')
-            .limit(20);
+            .or('full_name.ilike.%$query%,email.ilike.%$query%');
 
         if (currentUserId != null) {
           userQuery = userQuery.neq('id', currentUserId);
         }
 
-        final data = await userQuery;
+        final data = await userQuery.limit(20);
 
         if (mounted) {
           setState(() {
@@ -326,7 +325,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                   id: item['id'],
                   name: name,
                   type: type == 'ai' ? RoomType.ai : (type == 'private' ? RoomType.private : RoomType.thread),
-                  status: RoomStatus.active,
+                  status: RoomStatus.open,
                   ownerId: item['owner_id'] ?? '',
                   createdAt: DateTime.tryParse(item['created_at']?.toString() ?? '') ?? DateTime.now(),
                   isPublic: item['is_public'] ?? true,

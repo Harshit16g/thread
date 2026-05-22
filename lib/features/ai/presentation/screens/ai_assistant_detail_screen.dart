@@ -451,7 +451,7 @@ class _AiAssistantDetailScreenState extends State<AiAssistantDetailScreen> with 
                   fontFamily: 'Inter',
                   fontSize: 12,
                 ),
-                tableHeader: TextStyle(
+                tableHead: TextStyle(
                   color: widget.botColor,
                   fontFamily: 'Outfit',
                   fontWeight: FontWeight.bold,

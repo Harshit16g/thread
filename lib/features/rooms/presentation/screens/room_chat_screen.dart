@@ -921,14 +921,13 @@ class _InviteMembersSheetContentState extends State<_InviteMembersSheetContent> 
       var usersQuery = _client
           .from('profiles')
           .select()
-          .or('full_name.ilike.%$query%,email.ilike.%$query%')
-          .limit(10);
+          .or('full_name.ilike.%$query%,email.ilike.%$query%');
 
       if (currentUserId != null) {
         usersQuery = usersQuery.neq('id', currentUserId);
       }
 
-      final data = await usersQuery;
+      final data = await usersQuery.limit(10);
 
       setState(() {
         _searchResults = List<Map<String, dynamic>>.from(data as List);
