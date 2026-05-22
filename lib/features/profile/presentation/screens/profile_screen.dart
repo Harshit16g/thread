@@ -143,10 +143,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Phone Number Section
                 if (profile.phoneNumber != null)
                   GlassContainer(
-                    child: ListTile(
-                      leading: const Icon(Icons.phone),
-                      title: const Text('Phone Number'),
-                      subtitle: Text(profile.phoneNumber!),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        leading: const Icon(Icons.phone),
+                        title: const Text('Phone Number'),
+                        subtitle: Text(profile.phoneNumber!),
+                      ),
                     ),
                   ),
                 const SizedBox(height: 20),

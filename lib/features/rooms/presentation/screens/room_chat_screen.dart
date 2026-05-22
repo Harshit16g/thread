@@ -28,7 +28,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
 
   static const String _aiAgentId = '00000000-0000-0000-0000-000000000000';
 
-  late AnimationController _typingDotController;
+  AnimationController? _typingDotController;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    _typingDotController.dispose();
+    _typingDotController?.dispose();
     super.dispose();
   }
 
@@ -465,6 +465,8 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   // ─── AI Typing Indicator ───────────────────────────────────────────────────
 
   Widget _buildAiTypingIndicator() {
+    final controller = _typingDotController;
+    if (controller == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -501,13 +503,13 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
               border: Border.all(color: Colors.amber[800]!.withOpacity(0.08)),
             ),
             child: AnimatedBuilder(
-              animation: _typingDotController,
+              animation: controller,
               builder: (context, child) {
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(3, (i) {
                     final delay = i * 0.3;
-                    final t = ((_typingDotController.value + delay) % 1.0);
+                    final t = ((controller.value + delay) % 1.0);
                     final scale = 0.5 + 0.5 * (t < 0.5 ? t * 2 : (1 - t) * 2);
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 3),
