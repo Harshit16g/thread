@@ -6,6 +6,7 @@ import '../bloc/profile_bloc.dart';
 import '../bloc/events/profile_event.dart';
 import '../bloc/states/profile_state.dart';
 import 'profile_edit_screen.dart';
+import '../../../../core/services/ideas_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,12 +16,24 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  List<SavedIdea> _savedIdeas = [];
+
   @override
   void initState() {
     super.initState();
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId != null) {
       context.read<ProfileBloc>().add(ProfileLoadRequested(userId));
+    }
+    _loadSavedIdeas();
+  }
+
+  Future<void> _loadSavedIdeas() async {
+    final ideas = await IdeasService.getIdeas();
+    if (mounted) {
+      setState(() {
+        _savedIdeas = ideas;
+      });
     }
   }
 
@@ -238,6 +251,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
+
+                    // Workspace Ideas Ledger Board
+                    const SizedBox(height: 28),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Workspace Ideas Ledger',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded, color: Colors.white38, size: 18),
+                            onPressed: _loadSavedIdeas,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    if (_savedIdeas.isEmpty)
+                      GlassContainer(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                const Icon(Icons.star_outline_rounded, color: Colors.white24, size: 36),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Your Ledger is empty',
+                                  style: TextStyle(fontFamily: 'Outfit', fontSize: 13, color: Colors.white54, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Long-press message bubbles to bookmark important ideas here',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: Colors.white30),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _savedIdeas.length,
+                        itemBuilder: (context, index) {
+                          final idea = _savedIdeas[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.02),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white.withOpacity(0.04)),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: ExpansionTile(
+                                collapsedIconColor: Colors.amber,
+                                iconColor: Colors.amberAccent,
+                                leading: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.lightbulb_outline_rounded, color: Colors.amber, size: 16),
+                                ),
+                                title: Text(
+                                  idea.source,
+                                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Saved on ${idea.savedAt.toIso8601String().split('T')[0]}',
+                                  style: TextStyle(fontFamily: 'Inter', fontSize: 10.5, color: Colors.white.withOpacity(0.35)),
+                                ),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          idea.content,
+                                          style: const TextStyle(fontFamily: 'Inter', fontSize: 13, color: Colors.white70, height: 1.45),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            TextButton.icon(
+                                              onPressed: () async {
+                                                await IdeasService.deleteIdea(idea.id);
+                                                _loadSavedIdeas();
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    backgroundColor: Colors.redAccent,
+                                                    content: Text('Idea deleted from Ledger!'),
+                                                  ),
+                                                );
+                                              },
+                                              icon: const Icon(Icons.delete_outline_rounded, size: 14, color: Colors.redAccent),
+                                              label: const Text('Delete', style: TextStyle(fontFamily: 'Outfit', color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
                     const SizedBox(height: 28),
 
                     // Edit Profile Button

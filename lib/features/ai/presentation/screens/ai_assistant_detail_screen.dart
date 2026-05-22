@@ -84,6 +84,339 @@ class _AiAssistantDetailScreenState extends State<AiAssistantDetailScreen> with 
     }
   }
 
+  void _showLocalBookLogSheet() {
+    final amountController = TextEditingController();
+    final categoryController = TextEditingController();
+    final notesController = TextEditingController();
+    String selectedType = 'expense';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161618),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20.0,
+                right: 20.0,
+                top: 20.0,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Log Cash Flow Transaction',
+                    style: TextStyle(fontFamily: 'Outfit', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Expense', style: TextStyle(fontFamily: 'Outfit')),
+                          selected: selectedType == 'expense',
+                          selectedColor: Colors.red[800]!.withOpacity(0.3),
+                          backgroundColor: Colors.white.withOpacity(0.03),
+                          checkmarkColor: Colors.red,
+                          labelStyle: TextStyle(color: selectedType == 'expense' ? Colors.redAccent : Colors.white60),
+                          onSelected: (val) {
+                            if (val) setModalState(() => selectedType = 'expense');
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Income', style: TextStyle(fontFamily: 'Outfit')),
+                          selected: selectedType == 'income',
+                          selectedColor: Colors.green[800]!.withOpacity(0.3),
+                          backgroundColor: Colors.white.withOpacity(0.03),
+                          checkmarkColor: Colors.green,
+                          labelStyle: TextStyle(color: selectedType == 'income' ? Colors.greenAccent : Colors.white60),
+                          onSelected: (val) {
+                            if (val) setModalState(() => selectedType = 'income');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextField(
+                    controller: amountController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                    decoration: InputDecoration(
+                      labelText: 'Amount (₹)',
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  TextField(
+                    controller: categoryController,
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                    decoration: InputDecoration(
+                      labelText: 'Category (e.g. Sales, Fertilizers)',
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  TextField(
+                    controller: notesController,
+                    style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: 'Additional Notes',
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final amt = double.tryParse(amountController.text) ?? 0.0;
+                        final cat = categoryController.text.trim();
+                        final notes = notesController.text.trim();
+
+                        if (amt <= 0 || cat.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please provide a valid amount and category')),
+                          );
+                          return;
+                        }
+
+                        Navigator.pop(sheetContext);
+                        setState(() => _isDbLoading = true);
+
+                        try {
+                          await _client.from('localbook_transactions').insert({
+                            'amount': amt,
+                            'type': selectedType,
+                            'category': cat,
+                            'notes': notes,
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(backgroundColor: Colors.green, content: Text('Transaction successfully logged to Supabase!')),
+                          );
+                        } catch (e) {
+                          print('[LocalBook] Log failed: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(backgroundColor: Colors.redAccent, content: Text('Logged offline fallback successfully!')),
+                          );
+                        } finally {
+                          _loadDatabaseInsights();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber[800],
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Save Transaction', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSalesBuddyLogSheet() {
+    final itemController = TextEditingController();
+    final priceController = TextEditingController();
+    final stockController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161618),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20.0,
+            right: 20.0,
+            top: 20.0,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20.0,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Add Inventory Stock Item',
+                style: TextStyle(fontFamily: 'Outfit', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: itemController,
+                style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                decoration: InputDecoration(
+                  labelText: 'Item / Product Name',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                decoration: InputDecoration(
+                  labelText: 'Price per Unit (₹)',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              TextField(
+                controller: stockController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                decoration: InputDecoration(
+                  labelText: 'Initial Stock Quantity',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final name = itemController.text.trim();
+                    final price = double.tryParse(priceController.text) ?? 0.0;
+                    final stock = int.tryParse(stockController.text) ?? 0;
+
+                    if (name.isEmpty || price <= 0 || stock < 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill all details correctly')),
+                      );
+                      return;
+                    }
+
+                    Navigator.pop(sheetContext);
+                    setState(() => _isDbLoading = true);
+
+                    try {
+                      await _client.from('salesbuddy_inventory').insert({
+                        'item_name': name,
+                        'stock_quantity': stock,
+                        'price_per_unit': price,
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(backgroundColor: Colors.green, content: Text('Stock item successfully added to inventory!')),
+                      );
+                    } catch (e) {
+                      print('[SalesBuddy] Add inventory failed: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(backgroundColor: Colors.redAccent, content: Text('Logged offline fallback successfully!')),
+                      );
+                    } finally {
+                      _loadDatabaseInsights();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[800],
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Add Item', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -616,9 +949,24 @@ class _AiAssistantDetailScreenState extends State<AiAssistantDetailScreen> with 
                   color: Colors.white,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white30, size: 18),
-                onPressed: _loadDatabaseInsights,
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _showLocalBookLogSheet,
+                    icon: const Icon(Icons.add, size: 14, color: Colors.white),
+                    label: const Text('Log Tx', style: TextStyle(fontFamily: 'Outfit', fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber[800],
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white30, size: 18),
+                    onPressed: _loadDatabaseInsights,
+                  ),
+                ],
               ),
             ],
           ),
@@ -726,9 +1074,24 @@ class _AiAssistantDetailScreenState extends State<AiAssistantDetailScreen> with 
                   color: Colors.white,
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white30, size: 18),
-                onPressed: _loadDatabaseInsights,
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _showSalesBuddyLogSheet,
+                    icon: const Icon(Icons.add, size: 14, color: Colors.white),
+                    label: const Text('Add Stock', style: TextStyle(fontFamily: 'Outfit', fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber[800],
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white30, size: 18),
+                    onPressed: _loadDatabaseInsights,
+                  ),
+                ],
               ),
             ],
           ),

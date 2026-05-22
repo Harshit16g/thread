@@ -245,9 +245,69 @@ class RoomRepositoryImpl implements RoomRepository {
       }
 
       await _insertAiMessage(roomId, content);
+      
+      // Trigger background dynamic renaming check!
+      _checkAndTriggerAiRename(roomId, userMessage, content);
     } catch (e) {
       print('[TabL/RoomRepo] AI response exception: $e');
       await _insertAiMessage(roomId, 'I apologize, but I had trouble connecting to the AI service. Please check your connection and try again.');
+    }
+  }
+
+  Future<void> _checkAndTriggerAiRename(String roomId, String userMsg, String aiResponse) async {
+    final apiKey = dotenv.env['NV_API_KEY'] ?? '';
+    final baseUrl = dotenv.env['NV_BASE_URL'] ?? 'https://integrate.api.nvidia.com/v1';
+    final model = dotenv.env['NV_MODEL_NAME'] ?? 'minimaxai/minimax-m2.7';
+
+    if (apiKey.isEmpty) return;
+
+    try {
+      final currentRoom = await _client.from('rooms').select('name').eq('id', roomId).single();
+      final currentName = currentRoom['name'] as String? ?? 'New Chat';
+
+      final prompt = """
+You are a brilliant room-naming assistant. Analyze this conversation history between a human and an AI assistant:
+User: "$userMsg"
+Assistant: "$aiResponse"
+
+The current room name is: "$currentName"
+
+Is the current room name fitting, or should it be changed to a highly descriptive, catchy, premium 2-4 word title that perfectly represents the current main topic of discussion?
+
+Respond in exactly one of these two formats:
+1) If the name is already highly descriptive, fitting, and doesn't need to change: respond with "NO_CHANGE".
+2) If it should change: respond ONLY with the brand-new 2-4 word title (e.g. "Wheat Yield Advice" or "Cash Ledger Review"). Do NOT include quote marks, prefixes, markdown, or punctuation.
+""";
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/completions'),
+        headers: {
+          'Authorization': 'Bearer $apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'model': model,
+          'messages': [
+            {'role': 'system', 'content': 'You are a precise assistant.'},
+            {'role': 'user', 'content': prompt}
+          ],
+          'stream': false,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final choices = data['choices'] as List?;
+        if (choices != null && choices.isNotEmpty) {
+          final newNameText = (choices[0]['message']['content'] as String? ?? '').trim();
+          if (newNameText.isNotEmpty && !newNameText.toUpperCase().contains('NO_CHANGE') && newNameText != currentName) {
+            print('[TabL/RoomRepo] Background renaming AI room "$currentName" to "$newNameText"');
+            await _client.from('rooms').update({'name': newNameText}).eq('id', roomId);
+          }
+        }
+      }
+    } catch (e) {
+      print('[TabL/RoomRepo] Background rename checking failed: $e');
     }
   }
 

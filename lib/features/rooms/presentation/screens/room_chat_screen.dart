@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tabl/core/services/ideas_service.dart';
 import '../../domain/entities/room.dart';
 import '../../domain/entities/room_message.dart';
 import '../../domain/repositories/room_repository.dart';
@@ -31,6 +34,46 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   AnimationController? _typingDotController;
   late final MarkdownStyleSheet _aiMarkdownStyleSheet;
 
+  // Dynamic animated renaming state
+  late String _displayedRoomName;
+  StreamSubscription? _roomSubscription;
+  double _appBarTitleOpacity = 1.0;
+  bool _isRenaming = false;
+
+  Future<void> _animateRoomRename(String newName) async {
+    if (_isRenaming || !mounted) return;
+    _isRenaming = true;
+
+    // 1. Vanish animation (Fade Out)
+    for (double o = 1.0; o >= 0.0; o -= 0.1) {
+      await Future.delayed(const Duration(milliseconds: 25));
+      if (!mounted) return;
+      setState(() {
+        _appBarTitleOpacity = o.clamp(0.0, 1.0);
+      });
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _displayedRoomName = "";
+      _appBarTitleOpacity = 1.0; // Reset opacity for typewriter
+    });
+
+    // 2. Typewriter animation (Appear word by word)
+    final words = newName.split(' ');
+    String currentBuild = "";
+    for (int i = 0; i < words.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 160));
+      if (!mounted) return;
+      currentBuild += (i == 0 ? "" : " ") + words[i];
+      setState(() {
+        _displayedRoomName = currentBuild;
+      });
+    }
+
+    _isRenaming = false;
+  }
+
   // Cached heavy decorations for high frame-rate rendering
   late final BoxDecoration _aiBubbleDecoration;
   late final BoxDecoration _userBubbleDecorationMe;
@@ -42,6 +85,22 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
+    _displayedRoomName = widget.room.name ?? 'Chat';
+    
+    // Realtime Supabase listener to catch background AI room renaming!
+    _roomSubscription = Supabase.instance.client
+        .from('rooms')
+        .stream(primaryKey: ['id'])
+        .eq('id', widget.room.id)
+        .listen((data) {
+          if (data.isNotEmpty) {
+            final newName = data.first['name'] as String?;
+            if (newName != null && newName != _displayedRoomName && !_isRenaming) {
+              _animateRoomRename(newName);
+            }
+          }
+        });
+
     context.read<RoomChatBloc>().add(LoadMessagesRequested(widget.room.id));
     _typingDotController = AnimationController(
       vsync: this,
@@ -130,6 +189,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
 
   @override
   void dispose() {
+    _roomSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     _typingDotController?.dispose();
@@ -284,10 +344,14 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.room.name ?? 'Chat',
-                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  overflow: TextOverflow.ellipsis,
+                AnimatedOpacity(
+                  opacity: _appBarTitleOpacity,
+                  duration: Duration.zero, // controlled smoothly by state ticks
+                  child: Text(
+                    _displayedRoomName,
+                    style: const TextStyle(fontFamily: 'Outfit', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 Row(
                   children: [
@@ -429,23 +493,30 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
             ),
           Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-            child: Container(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: isMe ? _userBubbleDecorationMe : _userBubbleDecorationOther,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    message.content,
-                    style: const TextStyle(fontFamily: 'Inter', fontSize: 14.5, color: Colors.white, height: 1.4),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatTime(message.createdAt),
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white.withOpacity(0.25)),
-                  ),
-                ],
+            child: GestureDetector(
+              onLongPress: () => _showMessageActionSheet(
+                context,
+                message.content,
+                isMe ? 'My Idea' : 'Member Idea',
+              ),
+              child: Container(
+                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: isMe ? _userBubbleDecorationMe : _userBubbleDecorationOther,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      message.content,
+                      style: const TextStyle(fontFamily: 'Inter', fontSize: 14.5, color: Colors.white, height: 1.4),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTime(message.createdAt),
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white.withOpacity(0.25)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -493,29 +564,99 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
                 ],
               ),
             ),
-          Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
-            padding: const EdgeInsets.all(16),
-            decoration: _aiBubbleDecoration,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (thinkingText.isNotEmpty)
-                  CollapsibleThinkingBlock(thinkingText: thinkingText),
-                MarkdownBody(
-                  data: contentText,
-                  styleSheet: _aiMarkdownStyleSheet,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _formatTime(message.createdAt),
-                  style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white.withOpacity(0.2)),
-                ),
-              ],
+          GestureDetector(
+            onLongPress: () => _showMessageActionSheet(
+              context,
+              message.content,
+              'TabL AI',
+            ),
+            child: Container(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
+              padding: const EdgeInsets.all(16),
+              decoration: _aiBubbleDecoration,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (thinkingText.isNotEmpty)
+                    CollapsibleThinkingBlock(thinkingText: thinkingText),
+                  MarkdownBody(
+                    data: contentText,
+                    styleSheet: _aiMarkdownStyleSheet,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _formatTime(message.createdAt),
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: Colors.white.withOpacity(0.2)),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showMessageActionSheet(BuildContext context, String content, String senderLabel) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161618),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Message Options',
+                style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.star_outline_rounded, color: Colors.amber),
+                title: const Text('Save to Workspace Ledger', style: TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 13.5)),
+                subtitle: const Text('Bookmark this important discussion or idea', style: TextStyle(color: Colors.white30, fontSize: 11)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await IdeasService.saveIdea(content, senderLabel);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.amber,
+                      content: Text('Idea successfully saved to your Workspace Ledger!'),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.copy_rounded, color: Colors.tealAccent),
+                title: const Text('Copy to Clipboard', style: TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 13.5)),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Clipboard.setData(ClipboardData(text: content));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.green,
+                      content: Text('Message content copied to clipboard!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -746,6 +887,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   }
 
   void _showInviteMembersBottomSheet(BuildContext context) {
+    final isPublic = widget.room.isPublic || widget.room.type == RoomType.thread;
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF161618),
@@ -754,7 +896,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        return _InviteMembersSheetContent(roomId: widget.room.id);
+        return _InviteMembersSheetContent(roomId: widget.room.id, isPublic: isPublic);
       },
     );
   }
@@ -860,8 +1002,9 @@ class _CollapsibleThinkingBlockState extends State<CollapsibleThinkingBlock> {
 
 class _InviteMembersSheetContent extends StatefulWidget {
   final String roomId;
+  final bool isPublic;
 
-  const _InviteMembersSheetContent({required this.roomId});
+  const _InviteMembersSheetContent({required this.roomId, required this.isPublic});
 
   @override
   State<_InviteMembersSheetContent> createState() => _InviteMembersSheetContentState();
@@ -998,6 +1141,8 @@ class _InviteMembersSheetContentState extends State<_InviteMembersSheetContent> 
         bottom: MediaQuery.of(context).viewInsets.bottom + 20.0,
       ),
       child: MainModalLayout(
+        roomId: widget.roomId,
+        isPublic: widget.isPublic,
         isLoadingMembers: _isLoadingMembers,
         currentMembers: _currentMembers,
         isSearching: _isSearching,
@@ -1011,6 +1156,8 @@ class _InviteMembersSheetContentState extends State<_InviteMembersSheetContent> 
 }
 
 class MainModalLayout extends StatelessWidget {
+  final String roomId;
+  final bool isPublic;
   final bool isLoadingMembers;
   final List<Map<String, dynamic>> currentMembers;
   final bool isSearching;
@@ -1021,6 +1168,8 @@ class MainModalLayout extends StatelessWidget {
 
   const MainModalLayout({
     super.key,
+    required this.roomId,
+    required this.isPublic,
     required this.isLoadingMembers,
     required this.currentMembers,
     required this.isSearching,
@@ -1058,6 +1207,70 @@ class MainModalLayout extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
+
+        // Public Share Link Card
+        if (isPublic) ...[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.amber[800]!.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.amber[800]!.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.link, color: Colors.amber, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Public Thread Link',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'https://tabl.app/thread/$roomId',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: 'https://tabl.app/thread/$roomId'));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.green,
+                        content: Text('Copied shareable discussion link to clipboard!'),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[800],
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Copy', style: TextStyle(fontFamily: 'Outfit', fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
 
         // Live Search Input Bar
         Container(

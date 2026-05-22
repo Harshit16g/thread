@@ -133,16 +133,18 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
 
   Future<void> _initiateChat(BuildContext context, String targetUserId, String targetUserName) async {
     setState(() => _isLoading = true);
+    final roomRepo = RepositoryProvider.of<RoomRepository>(context);
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     try {
-      final roomRepo = RepositoryProvider.of<RoomRepository>(context);
       final room = await roomRepo.createPrivateChat(targetUserId, targetUserName);
       
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      // Smoothly slide directly into the chat room
-      Navigator.push(
-        context,
+      // Smoothly slide directly into the chat room using the captured navigator
+      navigator.push(
         MaterialPageRoute(
           builder: (routeContext) => BlocProvider(
             create: (blocContext) => RoomChatBloc(roomRepo),
@@ -154,13 +156,13 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
       print('[SearchScreen] Create chat failed: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.redAccent,
-            content: Text('Failed to start chat: ${e.toString()}'),
-          ),
-        );
       }
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Failed to start chat: ${e.toString()}'),
+        ),
+      );
     }
   }
 
