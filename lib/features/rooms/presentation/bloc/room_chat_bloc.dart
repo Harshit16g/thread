@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/room_repository.dart';
 import '../../domain/entities/room_message.dart';
 import 'events/room_chat_event.dart';
@@ -20,7 +21,9 @@ class RoomChatBloc extends Bloc<RoomChatEvent, RoomChatState> {
 
   Future<void> _onLoadMessages(LoadMessagesRequested event, Emitter<RoomChatState> emit) async {
     _messagesSubscription?.cancel();
-    emit(RoomChatLoading());
+    if (state is! RoomChatLoaded) {
+      emit(RoomChatLoading());
+    }
     
     _messagesSubscription = _roomRepository.getRoomMessages(event.roomId).listen(
       (messages) => add(_UpdateMessages(messages)),
@@ -45,34 +48,59 @@ class RoomChatBloc extends Bloc<RoomChatEvent, RoomChatState> {
   }
 
   Future<void> _onSendMessage(SendMessageRequested event, Emitter<RoomChatState> emit) async {
+    final currentState = state;
+    List<RoomMessage> currentMessages = [];
+    bool isAiTyping = false;
+    
+    if (currentState is RoomChatLoaded) {
+      currentMessages = List.from(currentState.messages);
+      isAiTyping = currentState.isAiTyping;
+    }
+
+    // 1. Create the user message entity optimistically
+    final optimisticUserMessage = RoomMessage(
+      id: 'opt-user-${DateTime.now().millisecondsSinceEpoch}',
+      roomId: event.roomId,
+      senderId: Supabase.instance.client.auth.currentUser?.id ?? 'user',
+      content: event.content,
+      isProposal: event.isProposal,
+      proposalStatus: event.isProposal ? ProposalStatus.pending : null,
+      createdAt: DateTime.now(),
+    );
+
+    // 2. Optimistically append and emit immediately so the bubble renders instantly
+    final updatedMessages = List<RoomMessage>.from(currentMessages)..add(optimisticUserMessage);
+    emit(RoomChatLoaded(updatedMessages, isAiTyping: isAiTyping));
+
     try {
+      // 3. Send message to the database
       await _roomRepository.sendMessage(
         event.roomId,
         event.content,
         isProposal: event.isProposal,
       );
 
-      // If this is an AI room, trigger the AI response
-      if (event.roomType == 'ai') {
-        add(const _SetAiTyping(true));
+      // Force a background database fetch to swap our optimistic message with the database record
+      add(LoadMessagesRequested(event.roomId));
 
-        // Gather current messages for context
-        final currentState = state;
-        List<RoomMessage> history = [];
-        if (currentState is RoomChatLoaded) {
-          history = currentState.messages;
-        }
+      // 4. If this is an AI room, trigger the AI response
+      if (event.roomType == 'ai') {
+        final freshState = state;
+        final listForContext = freshState is RoomChatLoaded ? freshState.messages : updatedMessages;
+        emit(RoomChatLoaded(listForContext, isAiTyping: true));
 
         try {
           await _roomRepository.sendAiResponse(
             event.roomId,
             event.content,
-            history,
+            listForContext,
           );
         } catch (e) {
           print('[TabL/RoomChatBloc] AI response error: $e');
         }
-        add(const _SetAiTyping(false));
+        
+        // After AI completes, force a fresh fetch to grab the AI response message from the DB
+        add(LoadMessagesRequested(event.roomId));
       }
     } catch (e) {
       emit(RoomChatError(e.toString()));
