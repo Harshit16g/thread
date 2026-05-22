@@ -29,6 +29,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
   static const String _aiAgentId = '00000000-0000-0000-0000-000000000000';
 
   AnimationController? _typingDotController;
+  late final MarkdownStyleSheet _aiMarkdownStyleSheet;
 
   @override
   void initState() {
@@ -38,6 +39,26 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat();
+
+    _aiMarkdownStyleSheet = MarkdownStyleSheet(
+      p: const TextStyle(fontFamily: 'Inter', fontSize: 14, color: Colors.white70, height: 1.55),
+      strong: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      em: TextStyle(fontStyle: FontStyle.italic, color: Colors.white.withValues(alpha: 0.6)),
+      tableBody: const TextStyle(fontFamily: 'Inter', fontSize: 12.5, color: Colors.white60),
+      tableHead: TextStyle(fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber[700]),
+      tableBorder: TableBorder.all(color: Colors.white.withValues(alpha: 0.06)),
+      tableCellsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      listBullet: TextStyle(color: Colors.amber[700], fontSize: 14),
+      code: TextStyle(fontFamily: 'monospace', fontSize: 13, color: Colors.amber[200], backgroundColor: Colors.white.withValues(alpha: 0.05)),
+      codeblockDecoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(8)),
+      h1: TextStyle(fontFamily: 'Outfit', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber[600]),
+      h2: TextStyle(fontFamily: 'Outfit', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber[700]),
+      h3: const TextStyle(fontFamily: 'Outfit', fontSize: 14.5, fontWeight: FontWeight.bold, color: Colors.white),
+      blockquoteDecoration: BoxDecoration(
+        color: Colors.amber[900]!.withValues(alpha: 0.06),
+        border: Border(left: BorderSide(color: Colors.amber[800]!, width: 3)),
+      ),
+    );
   }
 
   @override
@@ -429,25 +450,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
               children: [
                 MarkdownBody(
                   data: message.content,
-                  styleSheet: MarkdownStyleSheet(
-                    p: const TextStyle(fontFamily: 'Inter', fontSize: 14, color: Colors.white70, height: 1.55),
-                    strong: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                    em: TextStyle(fontStyle: FontStyle.italic, color: Colors.white.withOpacity(0.6)),
-                    tableBody: const TextStyle(fontFamily: 'Inter', fontSize: 12.5, color: Colors.white60),
-                    tableHead: TextStyle(fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.amber[700]),
-                    tableBorder: TableBorder.all(color: Colors.white.withOpacity(0.06)),
-                    tableCellsPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    listBullet: TextStyle(color: Colors.amber[700], fontSize: 14),
-                    code: TextStyle(fontFamily: 'monospace', fontSize: 13, color: Colors.amber[200], backgroundColor: Colors.white.withOpacity(0.05)),
-                    codeblockDecoration: BoxDecoration(color: Colors.black.withOpacity(0.3), borderRadius: BorderRadius.circular(8)),
-                    h1: TextStyle(fontFamily: 'Outfit', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber[600]),
-                    h2: TextStyle(fontFamily: 'Outfit', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber[700]),
-                    h3: const TextStyle(fontFamily: 'Outfit', fontSize: 14.5, fontWeight: FontWeight.bold, color: Colors.white),
-                    blockquoteDecoration: BoxDecoration(
-                      color: Colors.amber[900]!.withOpacity(0.06),
-                      border: Border(left: BorderSide(color: Colors.amber[800]!, width: 3)),
-                    ),
-                  ),
+                  styleSheet: _aiMarkdownStyleSheet,
                 ),
                 const SizedBox(height: 6),
                 Text(
