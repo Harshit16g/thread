@@ -17,15 +17,17 @@ class SendMessageRequested extends RoomChatEvent {
   final String roomId;
   final String content;
   final bool isProposal;
+  final String roomType; // 'private', 'ai', 'thread'
 
   const SendMessageRequested({
     required this.roomId,
     required this.content,
     this.isProposal = false,
+    this.roomType = 'private',
   });
 
   @override
-  List<Object?> get props => [roomId, content, isProposal];
+  List<Object?> get props => [roomId, content, isProposal, roomType];
 }
 
 class ApproveProposalRequested extends RoomChatEvent {

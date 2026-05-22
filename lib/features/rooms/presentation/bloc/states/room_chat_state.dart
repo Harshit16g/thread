@@ -13,9 +13,10 @@ class RoomChatLoading extends RoomChatState {}
 
 class RoomChatLoaded extends RoomChatState {
   final List<RoomMessage> messages;
-  const RoomChatLoaded(this.messages);
+  final bool isAiTyping;
+  const RoomChatLoaded(this.messages, {this.isAiTyping = false});
   @override
-  List<Object?> get props => [messages];
+  List<Object?> get props => [messages, isAiTyping];
 }
 
 class RoomChatError extends RoomChatState {

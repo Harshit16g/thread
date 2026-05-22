@@ -15,6 +15,7 @@ class RoomChatBloc extends Bloc<RoomChatEvent, RoomChatState> {
     on<ApproveProposalRequested>(_onApproveProposal);
     on<RejectProposalRequested>(_onRejectProposal);
     on<_UpdateMessages>(_onUpdateMessages);
+    on<_SetAiTyping>(_onSetAiTyping);
   }
 
   Future<void> _onLoadMessages(LoadMessagesRequested event, Emitter<RoomChatState> emit) async {
@@ -27,9 +28,20 @@ class RoomChatBloc extends Bloc<RoomChatEvent, RoomChatState> {
     );
   }
 
-  // Internal event to handle stream updates
   void _onUpdateMessages(_UpdateMessages event, Emitter<RoomChatState> emit) {
-    emit(RoomChatLoaded(event.messages));
+    final currentState = state;
+    final bool wasTyping = currentState is RoomChatLoaded && currentState.isAiTyping;
+    // If new messages arrived and AI was typing, check if AI message is now present
+    final bool aiJustResponded = wasTyping && event.messages.isNotEmpty &&
+        event.messages.last.senderId == '00000000-0000-0000-0000-000000000000';
+    emit(RoomChatLoaded(event.messages, isAiTyping: wasTyping && !aiJustResponded));
+  }
+
+  void _onSetAiTyping(_SetAiTyping event, Emitter<RoomChatState> emit) {
+    final currentState = state;
+    if (currentState is RoomChatLoaded) {
+      emit(RoomChatLoaded(currentState.messages, isAiTyping: event.isTyping));
+    }
   }
 
   Future<void> _onSendMessage(SendMessageRequested event, Emitter<RoomChatState> emit) async {
@@ -39,6 +51,29 @@ class RoomChatBloc extends Bloc<RoomChatEvent, RoomChatState> {
         event.content,
         isProposal: event.isProposal,
       );
+
+      // If this is an AI room, trigger the AI response
+      if (event.roomType == 'ai') {
+        add(const _SetAiTyping(true));
+
+        // Gather current messages for context
+        final currentState = state;
+        List<RoomMessage> history = [];
+        if (currentState is RoomChatLoaded) {
+          history = currentState.messages;
+        }
+
+        try {
+          await _roomRepository.sendAiResponse(
+            event.roomId,
+            event.content,
+            history,
+          );
+        } catch (e) {
+          print('[TabL/RoomChatBloc] AI response error: $e');
+        }
+        add(const _SetAiTyping(false));
+      }
     } catch (e) {
       emit(RoomChatError(e.toString()));
     }
@@ -70,4 +105,12 @@ class RoomChatBloc extends Bloc<RoomChatEvent, RoomChatState> {
 class _UpdateMessages extends RoomChatEvent {
   final List<RoomMessage> messages;
   const _UpdateMessages(this.messages);
+}
+
+class _SetAiTyping extends RoomChatEvent {
+  final bool isTyping;
+  const _SetAiTyping(this.isTyping);
+
+  @override
+  List<Object?> get props => [isTyping];
 }
