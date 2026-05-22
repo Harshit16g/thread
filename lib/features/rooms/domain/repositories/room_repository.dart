@@ -18,6 +18,9 @@ abstract class RoomRepository {
 
   Future<Room> convertToPublicThread(String roomId, String name);
 
+  /// Creates or retrieves a private chat room with another human user.
+  Future<Room> createPrivateChat(String targetUserId, String targetUserName);
+
   /// Sends the user's message to the AI and inserts the AI response into the room.
   Future<void> sendAiResponse(String roomId, String userMessage, List<RoomMessage> history);
 }

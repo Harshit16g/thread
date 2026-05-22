@@ -124,6 +124,60 @@ class RoomRepositoryImpl implements RoomRepository {
     return _mapToRoom(response);
   }
 
+  @override
+  Future<Room> createPrivateChat(String targetUserId, String targetUserName) async {
+    final myId = _client.auth.currentUser!.id;
+
+    // Check if private room already exists between me and targetUserId
+    final myMemberships = await _client
+        .from('room_members')
+        .select('room_id, rooms!inner(type)')
+        .eq('profile_id', myId)
+        .eq('rooms.type', RoomType.private.name);
+
+    final List myRoomIds = (myMemberships as List).map((m) => m['room_id']).toList();
+
+    if (myRoomIds.isNotEmpty) {
+      final sharedMemberships = await _client
+          .from('room_members')
+          .select('room_id, rooms(id, name, type, status, owner_id, created_at, is_public)')
+          .inFilter('room_id', myRoomIds)
+          .eq('profile_id', targetUserId);
+
+      final List shared = sharedMemberships as List;
+      if (shared.isNotEmpty) {
+        final roomData = shared[0]['rooms'];
+        return _mapToRoom(roomData);
+      }
+    }
+
+    // Create a new private room
+    final response = await _client.from('rooms').insert({
+      'name': targetUserName,
+      'type': RoomType.private.name,
+      'is_public': false,
+      'owner_id': myId,
+    }).select().single();
+
+    final room = _mapToRoom(response);
+
+    // Auto join owner
+    await _client.from('room_members').insert({
+      'room_id': room.id,
+      'profile_id': myId,
+      'role': 'owner',
+    });
+
+    // Auto join target user
+    await _client.from('room_members').insert({
+      'room_id': room.id,
+      'profile_id': targetUserId,
+      'role': 'member',
+    });
+
+    return room;
+  }
+
   // ─── AI Response Integration ─────────────────────────────────────────────────
 
   @override

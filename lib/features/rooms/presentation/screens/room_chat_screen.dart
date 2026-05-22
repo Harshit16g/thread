@@ -320,6 +320,11 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
               tooltip: 'Conclude Discussion',
               onPressed: () => _showConcludeDialog(context),
             ),
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1_outlined, color: Colors.amber, size: 20),
+            tooltip: 'Invite Members',
+            onPressed: () => _showInviteMembersBottomSheet(context),
+          ),
         ],
       ),
     );
@@ -740,6 +745,20 @@ class _RoomChatScreenState extends State<RoomChatScreen> with TickerProviderStat
     );
   }
 
+  void _showInviteMembersBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161618),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return _InviteMembersSheetContent(roomId: widget.room.id);
+      },
+    );
+  }
+
   Map<String, String> _parseThinkContent(String content) {
     final thinkRegex = RegExp(r'<think>([\s\S]*?)</think>');
     final match = thinkRegex.firstMatch(content);
@@ -835,6 +854,337 @@ class _CollapsibleThinkingBlockState extends State<CollapsibleThinkingBlock> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _InviteMembersSheetContent extends StatefulWidget {
+  final String roomId;
+
+  const _InviteMembersSheetContent({required this.roomId});
+
+  @override
+  State<_InviteMembersSheetContent> createState() => _InviteMembersSheetContentState();
+}
+
+class _InviteMembersSheetContentState extends State<_InviteMembersSheetContent> {
+  final SupabaseClient _client = Supabase.instance.client;
+  final TextEditingController _searchController = TextEditingController();
+
+  bool _isLoadingMembers = true;
+  bool _isSearching = false;
+  List<Map<String, dynamic>> _currentMembers = [];
+  List<Map<String, dynamic>> _searchResults = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentMembers();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentMembers() async {
+    setState(() => _isLoadingMembers = true);
+    try {
+      final data = await _client
+          .from('room_members')
+          .select('role, profiles(id, full_name, email, avatar_url)')
+          .eq('room_id', widget.roomId);
+
+      setState(() {
+        _currentMembers = List<Map<String, dynamic>>.from(data as List);
+        _isLoadingMembers = false;
+      });
+    } catch (e) {
+      print('[_InviteMembersSheetContent] Load members failed: $e');
+      setState(() => _isLoadingMembers = false);
+    }
+  }
+
+  Future<void> _searchUsers(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+    try {
+      final currentUserId = _client.auth.currentUser?.id;
+      var usersQuery = _client
+          .from('profiles')
+          .select()
+          .or('full_name.ilike.%$query%,email.ilike.%$query%')
+          .limit(10);
+
+      if (currentUserId != null) {
+        usersQuery = usersQuery.neq('id', currentUserId);
+      }
+
+      final data = await usersQuery;
+
+      setState(() {
+        _searchResults = List<Map<String, dynamic>>.from(data as List);
+        _isSearching = false;
+      });
+    } catch (e) {
+      print('[_InviteMembersSheetContent] Search failed: $e');
+      setState(() => _isSearching = false);
+    }
+  }
+
+  Future<void> _inviteUser(String targetUserId) async {
+    try {
+      // Check if user is already a member
+      final alreadyMember = _currentMembers.any((m) {
+        final profile = m['profiles'] as Map?;
+        return profile != null && profile['id'] == targetUserId;
+      });
+
+      if (alreadyMember) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.amber,
+            content: Text('User is already a member of this discussion room.'),
+          ),
+        );
+        return;
+      }
+
+      await _client.from('room_members').insert({
+        'room_id': widget.roomId,
+        'profile_id': targetUserId,
+        'role': 'member',
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('Successfully added member to the discussion room!'),
+        ),
+      );
+
+      _searchController.clear();
+      setState(() {
+        _searchResults = [];
+      });
+
+      // Reload
+      _loadCurrentMembers();
+    } catch (e) {
+      print('[_InviteMembersSheetContent] Invite failed: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Failed to invite member: ${e.toString()}'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20.0,
+        right: 20.0,
+        top: 20.0,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20.0,
+      ),
+      child: MainModalLayout(
+        isLoadingMembers: _isLoadingMembers,
+        currentMembers: _currentMembers,
+        isSearching: _isSearching,
+        searchResults: _searchResults,
+        searchController: _searchController,
+        onSearchChanged: _searchUsers,
+        onInvitePressed: _inviteUser,
+      ),
+    );
+  }
+}
+
+class MainModalLayout extends StatelessWidget {
+  final bool isLoadingMembers;
+  final List<Map<String, dynamic>> currentMembers;
+  final bool isSearching;
+  final List<Map<String, dynamic>> searchResults;
+  final TextEditingController searchController;
+  final ValueChanged<String> onSearchChanged;
+  final ValueChanged<String> onInvitePressed;
+
+  const MainModalLayout({
+    super.key,
+    required this.isLoadingMembers,
+    required this.currentMembers,
+    required this.isSearching,
+    required this.searchResults,
+    required this.searchController,
+    required this.onSearchChanged,
+    required this.onInvitePressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Pill Accent Indicator
+        Center(
+          child: Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        const Text(
+          'Manage Members & Share',
+          style: TextStyle(
+            fontFamily: 'Outfit',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Live Search Input Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: TextField(
+            controller: searchController,
+            onChanged: onSearchChanged,
+            style: const TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 13),
+            decoration: const InputDecoration(
+              hintText: 'Invite others by full name or email...',
+              hintStyle: TextStyle(color: Colors.white24, fontSize: 12.5),
+              prefixIcon: Icon(Icons.person_add_alt_outlined, color: Colors.white30, size: 18),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Search Results List
+        if (searchResults.isNotEmpty) ...[
+          const Text(
+            'Search Results',
+            style: TextStyle(fontFamily: 'Outfit', fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.amber),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            constraints: const BoxConstraints(maxHeight: 160),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: searchResults.length,
+              itemBuilder: (context, index) {
+                final user = searchResults[index];
+                final name = user['full_name'] ?? 'Anonymous';
+                final email = user['email'] ?? '';
+                final avatar = user['avatar_url'] as String?;
+
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white10,
+                    backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                    child: avatar == null ? const Icon(Icons.person, size: 14, color: Colors.white54) : null,
+                  ),
+                  title: Text(name, style: const TextStyle(color: Colors.white, fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text(email, style: const TextStyle(color: Colors.white38, fontFamily: 'Inter', fontSize: 11)),
+                  trailing: TextButton(
+                    onPressed: () => onInvitePressed(user['id']),
+                    style: TextButton.styleFrom(foregroundColor: Colors.amber),
+                    child: const Text('Add', style: TextStyle(fontFamily: 'Outfit', fontSize: 12.5, fontWeight: FontWeight.bold)),
+                  ),
+                );
+              },
+            ),
+          ),
+          const Divider(color: Colors.white10, height: 20),
+        ],
+
+        // Members List Title
+        const Text(
+          'Active Group Members',
+          style: TextStyle(
+            fontFamily: 'Outfit',
+            fontSize: 12.5,
+            fontWeight: FontWeight.bold,
+            color: Colors.white54,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Current Members List
+        if (isLoadingMembers)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.0),
+            child: Center(child: CircularProgressIndicator(color: Colors.amber)),
+          )
+        else
+          Container(
+            constraints: const BoxConstraints(maxHeight: 180),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: currentMembers.length,
+              itemBuilder: (context, index) {
+                final m = currentMembers[index];
+                final role = m['role'] ?? 'member';
+                final profile = m['profiles'] as Map?;
+                final name = profile?['full_name'] ?? 'Anonymous User';
+                final email = profile?['email'] ?? '';
+                final avatar = profile?['avatar_url'] as String?;
+
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white10,
+                    backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                    child: avatar == null ? const Icon(Icons.person, size: 14, color: Colors.white54) : null,
+                  ),
+                  title: Text(name, style: const TextStyle(color: Colors.white, fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text(email, style: const TextStyle(color: Colors.white38, fontFamily: 'Inter', fontSize: 11)),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      color: role == 'owner' ? Colors.teal.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+                    ),
+                    child: Text(
+                      role.toString().toUpperCase(),
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: role == 'owner' ? Colors.tealAccent : Colors.white54,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }
